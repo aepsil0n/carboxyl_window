@@ -2,12 +2,12 @@ use std::time::duration::Duration;
 use std::old_io::timer::sleep;
 use std::num::FromPrimitive;
 use glium::Display;
-use glutin::{Event, ElementState};
+use glutin::Event;
 use clock_ticks::precise_time_ns;
 use carboxyl::{Cell, Sink, Stream};
 use input::Button;
 
-use button::{ButtonEvent, ButtonState};
+use button::ButtonEvent;
 use traits::ApplicationLoop;
 
 
@@ -37,18 +37,40 @@ impl GliumLoop {
     }
 
     fn dispatch(&self, event: Event) {
+        use button::ButtonState;
+        use glutin::{self, ElementState};
+        use input;
+
+        fn to_button_state(state: ElementState) -> ButtonState {
+            match state {
+                ElementState::Pressed => ButtonState::Pressed,
+                ElementState::Released => ButtonState::Released,
+            }
+        }
+
         match event {
             Event::KeyboardInput(state, code, _) =>
                 match FromPrimitive::from_u8(code) {
                     Some(key) => self.button_sink.send(ButtonEvent {
                         button: Button::Keyboard(key),
-                        state: match state {
-                            ElementState::Pressed => ButtonState::Pressed,
-                            ElementState::Released => ButtonState::Released,
-                        },
+                        state: to_button_state(state),
                     }),
                     None => (),
                 },
+            Event::MouseInput(state, button) =>
+                self.button_sink.send(ButtonEvent {
+                    button: Button::Mouse(match button {
+                        glutin::MouseButton::LeftMouseButton =>
+                            input::MouseButton::Left,
+                        glutin::MouseButton::RightMouseButton =>
+                            input::MouseButton::Right,
+                        glutin::MouseButton::MiddleMouseButton =>
+                            input::MouseButton::Middle,
+                        glutin::MouseButton::OtherMouseButton(code) =>
+                            FromPrimitive::from_u8(code).unwrap(),
+                    }),
+                    state: to_button_state(state),
+                }),
             Event::MouseMoved(a) => self.mouse_motion_sink.send(a),
             // TODO: handle all events
             _ => (),
