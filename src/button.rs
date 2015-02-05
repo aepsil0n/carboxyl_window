@@ -1,15 +1,6 @@
-use glutin;
 use nalgebra::{one, zero, BaseFloat};
 use carboxyl::{Stream, Cell};
-
-
-/// A button.
-///
-/// FIXME: replace by own buttons
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Button {
-    Glutin(glutin::VirtualKeyCode),
-}
+use input::Button;
 
 
 /// The state of a button.
@@ -93,42 +84,41 @@ pub struct ButtonEvent {
 #[cfg(test)]
 mod test {
     use carboxyl::Sink;
+    use input::{Button, Key};
     use super::*;
     use super::ButtonState::{Pressed, Released};
 
     #[test]
     fn test_track_button_glutin() {
-        use glutin::VirtualKeyCode::A;
         let sink = Sink::new();
-        let state = ButtonState::track(&sink.stream(), Button::Glutin(A));
+        let state = ButtonState::track(&sink.stream(), Button::Keyboard(Key::A));
         assert_eq!(state.sample(), Released);
-        sink.send(ButtonEvent { button: Button::Glutin(A), state: Pressed });
+        sink.send(ButtonEvent { button: Button::Keyboard(Key::A), state: Pressed });
         assert_eq!(state.sample(), Pressed);
-        sink.send(ButtonEvent { button: Button::Glutin(A), state: Released });
+        sink.send(ButtonEvent { button: Button::Keyboard(Key::A), state: Released });
         assert_eq!(state.sample(), Released);
     }
 
     #[test]
     fn axis_buttons_glutin() {
-        use glutin::VirtualKeyCode::{W, S};
         use super::Direction::*;
 
         let sink = Sink::new();
         let direction = Direction::track(
-            &sink.stream(), Button::Glutin(W), Button::Glutin(S));
+            &sink.stream(), Button::Keyboard(Key::W), Button::Keyboard(Key::S));
 
         assert_eq!(direction.sample(), Still);
 
-        sink.send(ButtonEvent { button: Button::Glutin(W), state: Pressed });
+        sink.send(ButtonEvent { button: Button::Keyboard(Key::W), state: Pressed });
         assert_eq!(direction.sample(), Positive);
 
-        sink.send(ButtonEvent { button: Button::Glutin(S), state: Pressed });
+        sink.send(ButtonEvent { button: Button::Keyboard(Key::S), state: Pressed });
         assert_eq!(direction.sample(), Still);
 
-        sink.send(ButtonEvent { button: Button::Glutin(W), state: Released });
+        sink.send(ButtonEvent { button: Button::Keyboard(Key::W), state: Released });
         assert_eq!(direction.sample(), Negative);
 
-        sink.send(ButtonEvent { button: Button::Glutin(S), state: Released });
+        sink.send(ButtonEvent { button: Button::Keyboard(Key::S), state: Released });
         assert_eq!(direction.sample(), Still);
     }
 }

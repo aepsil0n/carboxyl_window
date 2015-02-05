@@ -1,11 +1,13 @@
 use std::time::duration::Duration;
 use std::old_io::timer::sleep;
+use std::num::FromPrimitive;
 use glium::Display;
 use glutin::{Event, ElementState};
 use clock_ticks::precise_time_ns;
 use carboxyl::{Sink, Stream};
+use input::Button;
 
-use button::{Button, ButtonEvent, ButtonState};
+use button::{ButtonEvent, ButtonState};
 use traits::ApplicationLoop;
 
 
@@ -15,6 +17,7 @@ pub struct GliumLoop {
     tick_length: u64,
     tick_sink: Sink<u64>,
     button_sink: Sink<ButtonEvent>,
+    mouse_motion_sink: Sink<(i32, i32)>,
 }
 
 impl GliumLoop {
@@ -29,19 +32,24 @@ impl GliumLoop {
             tick_length: tick_length,
             tick_sink: Sink::new(),
             button_sink: Sink::new(),
+            mouse_motion_sink: Sink::new(),
         }
     }
 
     fn dispatch(&self, event: Event) {
         match event {
-            Event::KeyboardInput(state, _, Some(virt)) =>
-                self.button_sink.send(ButtonEvent {
-                    button: Button::Glutin(virt),
-                    state: match state {
-                        ElementState::Pressed => ButtonState::Pressed,
-                        ElementState::Released => ButtonState::Released,
-                    },
-                }),
+            Event::KeyboardInput(state, code, _) =>
+                match FromPrimitive::from_u8(code) {
+                    Some(key) => self.button_sink.send(ButtonEvent {
+                        button: Button::Keyboard(key),
+                        state: match state {
+                            ElementState::Pressed => ButtonState::Pressed,
+                            ElementState::Released => ButtonState::Released,
+                        },
+                    }),
+                    None => (),
+                },
+            Event::MouseMoved(a) => self.mouse_motion_sink.send(a),
             // TODO: handle all events
             _ => (),
         }
