@@ -8,7 +8,8 @@ extern crate glutin;
 extern crate glium;
 extern crate input;
 
+pub use traits::ApplicationLoop;
 
-pub mod button;
 pub mod glium_loop;
-pub mod traits;
+pub mod button;
+mod traits;
