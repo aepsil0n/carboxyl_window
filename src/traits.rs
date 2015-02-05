@@ -7,6 +7,12 @@ pub trait ApplicationLoop {
     /// Stream of discrete time intervals (ticks).
     fn ticks(&self) -> Stream<u64>;
 
+    /// Position of the window
+    fn position(&self) -> Cell<(i32, i32)>;
+
+    /// Size of the window
+    fn size(&self) -> Cell<(u32, u32)>;
+
     /// Stream of input events.
     ///
     /// FIXME: need to ship our own event type here and make it consistent with

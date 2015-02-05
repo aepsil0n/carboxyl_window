@@ -16,6 +16,8 @@ pub struct GliumLoop {
     display: Display,
     tick_length: u64,
     tick_sink: Sink<u64>,
+    winpos_sink: Sink<(i32, i32)>,
+    winsize_sink: Sink<(u32, u32)>,
     button_sink: Sink<ButtonEvent>,
     mouse_motion_sink: Sink<(i32, i32)>,
     mouse_wheel_sink: Sink<i32>,
@@ -37,6 +39,8 @@ impl GliumLoop {
             mouse_motion_sink: Sink::new(),
             mouse_wheel_sink: Sink::new(),
             focus_sink: Sink::new(),
+            winpos_sink: Sink::new(),
+            winsize_sink: Sink::new(),
         }
     }
 
@@ -78,6 +82,8 @@ impl GliumLoop {
             Event::MouseWheel(a) => self.mouse_wheel_sink.send(a),
             Event::MouseMoved(a) => self.mouse_motion_sink.send(a),
             Event::Focused(a) => self.focus_sink.send(a),
+            Event::Resized(w, h) => self.winsize_sink.send((w, h)),
+            Event::Moved(x, y) => self.winpos_sink.send((x, y)),
             // TODO: handle all events
             _ => (),
         }
@@ -87,6 +93,14 @@ impl GliumLoop {
 impl ApplicationLoop for GliumLoop {
     fn ticks(&self) -> Stream<u64> {
         self.tick_sink.stream()
+    }
+
+    fn position(&self) -> Cell<(i32, i32)> {
+        self.winpos_sink.stream().hold((0, 0))
+    }
+
+    fn size(&self) -> Cell<(u32, u32)> {
+        self.winsize_sink.stream().hold((0, 0))
     }
 
     fn buttons(&self) -> Stream<ButtonEvent> {
