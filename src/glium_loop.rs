@@ -18,6 +18,8 @@ pub struct GliumLoop {
     tick_sink: Sink<u64>,
     button_sink: Sink<ButtonEvent>,
     mouse_motion_sink: Sink<(i32, i32)>,
+    mouse_wheel_sink: Sink<i32>,
+    focus_sink: Sink<bool>,
 }
 
 impl GliumLoop {
@@ -33,6 +35,8 @@ impl GliumLoop {
             tick_sink: Sink::new(),
             button_sink: Sink::new(),
             mouse_motion_sink: Sink::new(),
+            mouse_wheel_sink: Sink::new(),
+            focus_sink: Sink::new(),
         }
     }
 
@@ -71,7 +75,9 @@ impl GliumLoop {
                     }),
                     state: to_button_state(state),
                 }),
+            Event::MouseWheel(a) => self.mouse_wheel_sink.send(a),
             Event::MouseMoved(a) => self.mouse_motion_sink.send(a),
+            Event::Focused(a) => self.focus_sink.send(a),
             // TODO: handle all events
             _ => (),
         }
@@ -89,6 +95,14 @@ impl ApplicationLoop for GliumLoop {
 
     fn cursor(&self) -> Cell<(i32, i32)> {
         self.mouse_motion_sink.stream().hold((0, 0))
+    }
+
+    fn wheel(&self) -> Cell<i32> {
+        self.mouse_wheel_sink.stream().hold(0)
+    }
+
+    fn focus(&self) -> Cell<bool> {
+        self.focus_sink.stream().hold(true)
     }
 
     fn start(&self) {

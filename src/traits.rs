@@ -16,6 +16,12 @@ pub trait ApplicationLoop {
     /// Position of the mouse cursor
     fn cursor(&self) -> Cell<(i32, i32)>;
 
+    /// Position of the mouse wheel
+    fn wheel(&self) -> Cell<i32>;
+
+    /// Window focus
+    fn focus(&self) -> Cell<bool>;
+
     /// Start the application logic.
     fn start(&self);
 }
