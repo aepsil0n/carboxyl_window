@@ -22,6 +22,7 @@ pub struct GliumLoop {
     mouse_motion_sink: Sink<(i32, i32)>,
     mouse_wheel_sink: Sink<i32>,
     focus_sink: Sink<bool>,
+    char_sink: Sink<char>,
 }
 
 impl GliumLoop {
@@ -41,6 +42,7 @@ impl GliumLoop {
             focus_sink: Sink::new(),
             winpos_sink: Sink::new(),
             winsize_sink: Sink::new(),
+            char_sink: Sink::new(),
         }
     }
 
@@ -84,7 +86,7 @@ impl GliumLoop {
             Event::Focused(a) => self.focus_sink.send(a),
             Event::Resized(w, h) => self.winsize_sink.send((w, h)),
             Event::Moved(x, y) => self.winpos_sink.send((x, y)),
-            // TODO: handle all events
+            Event::ReceivedCharacter(c) => self.char_sink.send(c),
             _ => (),
         }
     }
@@ -107,6 +109,10 @@ impl ApplicationLoop for GliumLoop {
         self.button_sink.stream()
     }
 
+    fn characters(&self) -> Stream<char> {
+        self.char_sink.stream()
+    }
+
     fn cursor(&self) -> Cell<(i32, i32)> {
         self.mouse_motion_sink.stream().hold((0, 0))
     }
@@ -122,13 +128,14 @@ impl ApplicationLoop for GliumLoop {
     fn start(&self) {
         let mut time = precise_time_ns();
         let mut next_tick = time;
-        loop {
+        'main: loop {
             time = precise_time_ns();
             if time >= next_tick {
                 let diff = time - next_tick;
                 let delta = diff - diff % self.tick_length;
                 next_tick += delta;
                 for ev in self.display.poll_events() {
+                    if let Event::Closed = ev { break 'main }
                     self.dispatch(ev);
                 }
                 self.tick_sink.send(delta);

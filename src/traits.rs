@@ -19,6 +19,9 @@ pub trait ApplicationLoop {
     /// the paradigm.
     fn buttons(&self) -> Stream<ButtonEvent>;
 
+    /// A stream of characters received by the window
+    fn characters(&self) -> Stream<char>;
+
     /// Position of the mouse cursor
     fn cursor(&self) -> Cell<(i32, i32)>;
 
