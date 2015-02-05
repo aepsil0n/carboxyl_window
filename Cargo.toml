@@ -6,6 +6,7 @@ authors = ["Eduard Bopp <eduard.bopp@aepsil0n.de>"]
 
 [dependencies]
 carboxyl = "*"
+pistoncore-input = "*"
 
 [dependencies.nalgebra]
 git = "https://github.com/sebcrozet/nalgebra"
@@ -15,11 +16,7 @@ git = "https://github.com/tomaka/glutin"
 
 [dependencies.glium]
 git = "https://github.com/tomaka/glium"
-features = []
 default-features = false
 
 [dependencies.clock_ticks]
 git = "https://github.com/tomaka/clock_ticks"
-
-[dependencies.pistoncore-input]
-git = "https://github.com/PistonDevelopers/input"

@@ -70,13 +70,13 @@ impl GliumLoop {
             Event::MouseInput(state, button) =>
                 self.button_sink.send(ButtonEvent {
                     button: Button::Mouse(match button {
-                        glutin::MouseButton::LeftMouseButton =>
+                        glutin::MouseButton::Left =>
                             input::MouseButton::Left,
-                        glutin::MouseButton::RightMouseButton =>
+                        glutin::MouseButton::Right =>
                             input::MouseButton::Right,
-                        glutin::MouseButton::MiddleMouseButton =>
+                        glutin::MouseButton::Middle =>
                             input::MouseButton::Middle,
-                        glutin::MouseButton::OtherMouseButton(code) =>
+                        glutin::MouseButton::Other(code) =>
                             FromPrimitive::from_u8(code).unwrap(),
                     }),
                     state: to_button_state(state),
