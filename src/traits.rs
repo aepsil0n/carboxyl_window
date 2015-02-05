@@ -1,4 +1,4 @@
-use carboxyl::Stream;
+use carboxyl::{Stream, Cell};
 use button::ButtonEvent;
 
 
@@ -12,6 +12,9 @@ pub trait ApplicationLoop {
     /// FIXME: need to ship our own event type here and make it consistent with
     /// the paradigm.
     fn buttons(&self) -> Stream<ButtonEvent>;
+
+    /// Position of the mouse cursor
+    fn cursor(&self) -> Cell<(i32, i32)>;
 
     /// Start the application logic.
     fn start(&self);

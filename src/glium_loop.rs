@@ -4,7 +4,7 @@ use std::num::FromPrimitive;
 use glium::Display;
 use glutin::{Event, ElementState};
 use clock_ticks::precise_time_ns;
-use carboxyl::{Sink, Stream};
+use carboxyl::{Cell, Sink, Stream};
 use input::Button;
 
 use button::{ButtonEvent, ButtonState};
@@ -63,6 +63,10 @@ impl ApplicationLoop for GliumLoop {
 
     fn buttons(&self) -> Stream<ButtonEvent> {
         self.button_sink.stream()
+    }
+
+    fn cursor(&self) -> Cell<(i32, i32)> {
+        self.mouse_motion_sink.stream().hold((0, 0))
     }
 
     fn start(&self) {
