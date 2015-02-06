@@ -1,8 +1,14 @@
 [package]
 
-name = "frpwindow"
+name = "carboxyl_window"
 version = "0.0.1"
 authors = ["Eduard Bopp <eduard.bopp@aepsil0n.de>"]
+description = "Functional reactive window API"
+homepage = "https://github.com/aepsil0n/carboxyl_window"
+repository = "https://github.com/aepsil0n/carboxyl_window"
+readme = "README.md"
+keywords = ["frp", "reactive", "event", "window"]
+license = "LGPL-3.0+"
 
 [dependencies]
 carboxyl = "*"
