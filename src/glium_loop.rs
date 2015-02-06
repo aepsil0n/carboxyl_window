@@ -139,6 +139,8 @@ impl ApplicationLoop for GliumLoop {
                     self.dispatch(ev);
                 }
                 self.tick_sink.send(delta);
+                // Make sure that drawing is finished at the end of a tick
+                self.display.synchronize();
             }
             else {
                 sleep(Duration::nanoseconds(next_tick as i64 - time as i64));
