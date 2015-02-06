@@ -6,7 +6,6 @@ authors = ["Eduard Bopp <eduard.bopp@aepsil0n.de>"]
 
 [dependencies]
 carboxyl = "*"
-pistoncore-input = "*"
 
 [dependencies.nalgebra]
 git = "https://github.com/sebcrozet/nalgebra"

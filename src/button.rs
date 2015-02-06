@@ -1,6 +1,5 @@
 use nalgebra::{one, zero, BaseFloat};
 use carboxyl::{Stream, Cell};
-use input::Button;
 
 
 /// The state of a button.
@@ -12,8 +11,9 @@ pub enum ButtonState {
 
 impl ButtonState {
     /// Track the state of a button in a cell from a stream of button events.
-    pub fn track(inputs: &Stream<ButtonEvent>, button: Button)
+    pub fn track<B>(inputs: &Stream<ButtonEvent<B>>, button: B)
         -> Cell<ButtonState>
+    where B: Eq + Clone + Send + Sync
     {
         inputs
             .map(move |event|
@@ -58,8 +58,9 @@ impl Direction {
     }
 
     /// Track direction from a stream of button events in a cell.
-    pub fn track(inputs: &Stream<ButtonEvent>, pos: Button, neg: Button)
+    pub fn track<B>(inputs: &Stream<ButtonEvent<B>>, pos: B, neg: B)
         -> Cell<Direction>
+    where B: Eq + Clone + Send + Sync
     {
         lift!(
             Direction::from_buttons,
@@ -72,9 +73,9 @@ impl Direction {
 
 /// An event involving a button of some kind.
 #[derive(PartialEq, Eq, Copy, Debug, Clone)]
-pub struct ButtonEvent {
+pub struct ButtonEvent<B> {
     /// The button concerned.
-    pub button: Button,
+    pub button: B,
 
     /// The new state of the button.
     pub state: ButtonState,

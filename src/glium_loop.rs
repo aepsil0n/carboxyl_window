@@ -1,14 +1,20 @@
 use std::time::duration::Duration;
 use std::old_io::timer::sleep;
-use std::num::FromPrimitive;
 use glium::Display;
-use glutin::Event;
+use glutin::{Event, VirtualKeyCode, MouseButton, ElementState};
 use clock_ticks::precise_time_ns;
 use carboxyl::{Cell, Sink, Stream};
-use input::Button;
 
-use button::ButtonEvent;
+use button::{ButtonEvent, ButtonState};
 use traits::ApplicationLoop;
+
+
+/// A Glutin button
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum Button {
+    Keyboard(VirtualKeyCode),
+    Mouse(MouseButton),
+}
 
 
 /// Glium implementation of an application loop.
@@ -18,7 +24,7 @@ pub struct GliumLoop {
     tick_sink: Sink<u64>,
     winpos_sink: Sink<(i32, i32)>,
     winsize_sink: Sink<(u32, u32)>,
-    button_sink: Sink<ButtonEvent>,
+    button_sink: Sink<ButtonEvent<Button>>,
     mouse_motion_sink: Sink<(i32, i32)>,
     mouse_wheel_sink: Sink<i32>,
     focus_sink: Sink<bool>,
@@ -47,10 +53,6 @@ impl GliumLoop {
     }
 
     fn dispatch(&self, event: Event) {
-        use button::ButtonState;
-        use glutin::{self, ElementState};
-        use input;
-
         fn to_button_state(state: ElementState) -> ButtonState {
             match state {
                 ElementState::Pressed => ButtonState::Pressed,
@@ -59,26 +61,14 @@ impl GliumLoop {
         }
 
         match event {
-            Event::KeyboardInput(state, code, _) =>
-                match FromPrimitive::from_u8(code) {
-                    Some(key) => self.button_sink.send(ButtonEvent {
-                        button: Button::Keyboard(key),
-                        state: to_button_state(state),
-                    }),
-                    None => (),
-                },
+            Event::KeyboardInput(state, _, Some(vkey)) =>
+                self.button_sink.send(ButtonEvent {
+                    button: Button::Keyboard(vkey),
+                    state: to_button_state(state),
+                }),
             Event::MouseInput(state, button) =>
                 self.button_sink.send(ButtonEvent {
-                    button: Button::Mouse(match button {
-                        glutin::MouseButton::Left =>
-                            input::MouseButton::Left,
-                        glutin::MouseButton::Right =>
-                            input::MouseButton::Right,
-                        glutin::MouseButton::Middle =>
-                            input::MouseButton::Middle,
-                        glutin::MouseButton::Other(code) =>
-                            FromPrimitive::from_u8(code).unwrap(),
-                    }),
+                    button: Button::Mouse(button),
                     state: to_button_state(state),
                 }),
             Event::MouseWheel(a) => self.mouse_wheel_sink.send(a),
@@ -105,7 +95,9 @@ impl ApplicationLoop for GliumLoop {
         self.winsize_sink.stream().hold((0, 0))
     }
 
-    fn buttons(&self) -> Stream<ButtonEvent> {
+    type Button = Button;
+
+    fn buttons(&self) -> Stream<ButtonEvent<Button>> {
         self.button_sink.stream()
     }
 

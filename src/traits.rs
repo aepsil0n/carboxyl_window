@@ -13,11 +13,14 @@ pub trait ApplicationLoop {
     /// Size of the window
     fn size(&self) -> Cell<(u32, u32)>;
 
+    /// Button type received by the application window
+    type Button;
+
     /// Stream of input events.
     ///
     /// FIXME: need to ship our own event type here and make it consistent with
     /// the paradigm.
-    fn buttons(&self) -> Stream<ButtonEvent>;
+    fn buttons(&self) -> Stream<ButtonEvent<Self::Button>>;
 
     /// A stream of characters received by the window
     fn characters(&self) -> Stream<char>;
