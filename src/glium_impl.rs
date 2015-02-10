@@ -8,11 +8,11 @@ use input::Button;
 use glutin_window::{map_key, map_mouse};
 
 use button::{ButtonEvent, ButtonState};
-use traits::ApplicationLoop;
+use ::Window;
 
 
 /// Glium implementation of an application loop.
-pub struct GliumLoop {
+pub struct GliumWindow {
     display: Display,
     tick_length: u64,
     tick_sink: Sink<u64>,
@@ -25,14 +25,14 @@ pub struct GliumLoop {
     char_sink: Sink<char>,
 }
 
-impl GliumLoop {
+impl GliumWindow {
     /// Create a new Glium loop.
     ///
     /// # Parameters
     ///
     /// `tick_length` is the minimum duration of a tick in nanoseconds.
-    pub fn new(display: Display, tick_length: u64) -> GliumLoop {
-        GliumLoop {
+    pub fn new(display: Display, tick_length: u64) -> GliumWindow {
+        GliumWindow {
             display: display,
             tick_length: tick_length,
             tick_sink: Sink::new(),
@@ -76,7 +76,7 @@ impl GliumLoop {
     }
 }
 
-impl ApplicationLoop for GliumLoop {
+impl Window for GliumWindow {
     fn ticks(&self) -> Stream<u64> {
         self.tick_sink.stream()
     }
