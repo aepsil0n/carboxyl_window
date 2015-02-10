@@ -6,6 +6,7 @@ extern crate nalgebra;
 extern crate clock_ticks;
 extern crate glutin;
 extern crate glium;
+extern crate input;
 
 pub use traits::ApplicationLoop;
 

@@ -12,6 +12,7 @@ license = "LGPL-3.0+"
 
 [dependencies]
 carboxyl = "*"
+pistoncore-input = "*"
 
 [dependencies.nalgebra]
 git = "https://github.com/sebcrozet/nalgebra"
