@@ -1,20 +1,14 @@
 use std::time::duration::Duration;
 use std::old_io::timer::sleep;
 use glium::Display;
-use glutin::{Event, VirtualKeyCode, MouseButton, ElementState};
+use glutin::{Event, ElementState};
 use clock_ticks::precise_time_ns;
 use carboxyl::{Cell, Sink, Stream};
+use input::Button;
+use glutin_window::{map_key, map_mouse};
 
 use button::{ButtonEvent, ButtonState};
 use traits::ApplicationLoop;
-
-
-/// A Glutin button
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Button {
-    Keyboard(VirtualKeyCode),
-    Mouse(MouseButton),
-}
 
 
 /// Glium implementation of an application loop.
@@ -24,7 +18,7 @@ pub struct GliumLoop {
     tick_sink: Sink<u64>,
     winpos_sink: Sink<(i32, i32)>,
     winsize_sink: Sink<(u32, u32)>,
-    button_sink: Sink<ButtonEvent<Button>>,
+    button_sink: Sink<ButtonEvent>,
     mouse_motion_sink: Sink<(i32, i32)>,
     mouse_wheel_sink: Sink<i32>,
     focus_sink: Sink<bool>,
@@ -63,12 +57,12 @@ impl GliumLoop {
         match event {
             Event::KeyboardInput(state, _, Some(vkey)) =>
                 self.button_sink.send(ButtonEvent {
-                    button: Button::Keyboard(vkey),
+                    button: Button::Keyboard(map_key(vkey)),
                     state: to_button_state(state),
                 }),
             Event::MouseInput(state, button) =>
                 self.button_sink.send(ButtonEvent {
-                    button: Button::Mouse(button),
+                    button: Button::Mouse(map_mouse(button)),
                     state: to_button_state(state),
                 }),
             Event::MouseWheel(a) => self.mouse_wheel_sink.send(a),
@@ -95,9 +89,7 @@ impl ApplicationLoop for GliumLoop {
         self.winsize_sink.stream().hold((0, 0))
     }
 
-    type Button = Button;
-
-    fn buttons(&self) -> Stream<ButtonEvent<Button>> {
+    fn buttons(&self) -> Stream<ButtonEvent> {
         self.button_sink.stream()
     }
 

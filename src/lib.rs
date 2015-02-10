@@ -7,6 +7,7 @@ extern crate clock_ticks;
 extern crate glutin;
 extern crate glium;
 extern crate input;
+extern crate glutin_window;
 
 pub use traits::ApplicationLoop;
 

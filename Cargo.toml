@@ -12,13 +12,18 @@ license = "LGPL-3.0+"
 
 [dependencies]
 carboxyl = "*"
-pistoncore-input = "*"
+
+[dependencies.pistoncore-input]
+git = "https://github.com/PistonDevelopers/input"
 
 [dependencies.nalgebra]
 git = "https://github.com/sebcrozet/nalgebra"
 
 [dependencies.glutin]
 git = "https://github.com/tomaka/glutin"
+
+[dependencies.pistoncore-glutin_window]
+git = "https://github.com/PistonDevelopers/glutin_window"
 
 [dependencies.glium]
 git = "https://github.com/tomaka/glium"
