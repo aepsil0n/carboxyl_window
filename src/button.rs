@@ -16,11 +16,10 @@ impl ButtonState {
         -> Cell<ButtonState>
     {
         inputs
-            .map(move |event|
+            .filter_map(move |event|
                 if event.button == button { Some(event.state) }
                 else { None }
             )
-            .filter()
             .hold(ButtonState::Released)
     }
 }
