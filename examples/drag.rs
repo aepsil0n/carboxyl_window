@@ -85,13 +85,6 @@ fn main() {
                 let mut backend = GliumSurfaceBackEnd::new(&mut backend_sys, &mut target);
                 let context = Context::abs(w as f64, h as f64);
                 graphics::clear([1.0; 4], &mut backend);
-                /*if let Some((_, drag)) = drag {
-                    graphics::Rectangle::new([0.0, 0.8, 0.0, 0.7])
-                    .draw(
-                        [(drag.0 - 50) as f64, (drag.1 - 50) as f64, 100.0, 100.0],
-                        &context, &mut backend
-                    );
-                }*/
                 for rect in rects {
                     graphics::Rectangle::new([1.0, 0.3, 0.0, 0.7])
                     .draw(
