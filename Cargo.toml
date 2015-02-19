@@ -31,3 +31,12 @@ default-features = false
 
 [dependencies.clock_ticks]
 git = "https://github.com/tomaka/clock_ticks"
+
+[dependencies.piston2d-graphics]
+git = "https://github.com/PistonDevelopers/graphics"
+
+[dependencies.glium_graphics]
+git = "https://github.com/PistonDevelopers/glium_graphics"
+
+[dependencies.image]
+git = "https://github.com/PistonDevelopers/image"
