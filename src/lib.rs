@@ -29,9 +29,6 @@ pub trait Window {
     fn size(&self) -> Cell<(u32, u32)>;
 
     /// Stream of input events.
-    ///
-    /// FIXME: need to ship our own event type here and make it consistent with
-    /// the paradigm.
     fn buttons(&self) -> Stream<ButtonEvent>;
 
     /// A stream of characters received by the window
