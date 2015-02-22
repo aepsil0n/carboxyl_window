@@ -1,4 +1,3 @@
-use nalgebra::{one, zero, BaseFloat};
 use carboxyl::{Stream, Cell};
 use input::Button;
 
@@ -44,15 +43,6 @@ impl Direction {
             (Pressed, Released) => Direction::Positive,
             (Released, Pressed) => Direction::Negative,
             _ => Direction::Still,
-        }
-    }
-
-    /// The sign of a button state as a float.
-    pub fn sign<T: BaseFloat>(&self) -> T {
-        match *self {
-            Direction::Positive => one(),
-            Direction::Negative => -one::<T>(),
-            Direction::Still => zero(),
         }
     }
 
