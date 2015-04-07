@@ -12,28 +12,17 @@ license = "LGPL-3.0+"
 
 [dependencies]
 carboxyl = "*"
+glutin = "*"
+image = "*"
+pistoncore-input = "*"
+piston2d-graphics = "*"
+clock_ticks = "*"
 
-[dependencies.pistoncore-input]
-git = "https://github.com/PistonDevelopers/input"
-
-[dependencies.glutin]
-git = "https://github.com/tomaka/glutin"
+[dependencies.glium]
+default-features = false
 
 [dependencies.pistoncore-glutin_window]
 git = "https://github.com/PistonDevelopers/glutin_window"
 
-[dependencies.glium]
-git = "https://github.com/tomaka/glium"
-default-features = false
-
-[dependencies.clock_ticks]
-git = "https://github.com/tomaka/clock_ticks"
-
-[dependencies.piston2d-graphics]
-git = "https://github.com/PistonDevelopers/graphics"
-
 [dependencies.glium_graphics]
 git = "https://github.com/PistonDevelopers/glium_graphics"
-
-[dependencies.image]
-git = "https://github.com/PistonDevelopers/image"
