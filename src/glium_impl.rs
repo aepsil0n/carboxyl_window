@@ -1,5 +1,4 @@
-use std::time::duration::Duration;
-use std::old_io::timer::sleep;
+use std::thread::sleep_ms;
 use glium::Display;
 use glutin::{Event, ElementState};
 use clock_ticks::precise_time_ns;
@@ -127,7 +126,7 @@ impl Window for GliumWindow {
                 self.display.synchronize();
             }
             else {
-                sleep(Duration::nanoseconds(next_tick as i64 - time as i64));
+                sleep_ms((next_tick - time) as u32);
             }
         }
     }
