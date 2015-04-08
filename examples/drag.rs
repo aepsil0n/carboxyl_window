@@ -9,21 +9,35 @@ extern crate carboxyl;
 extern crate carboxyl_window;
 
 
-fn main() {
-    use glium::{ DisplayBuild, Surface };
-    use glium_graphics::{ Glium2d, GliumGraphics, OpenGL };
-    use input::{ Button, Key, MouseButton };
-    use carboxyl::CellCycle;
-    use carboxyl_window::{ GliumWindow, Window, ButtonState, ButtonEvent };
-    use std::thread;
-    use std::sync::mpsc;
+use glium::{ DisplayBuild, Surface };
+use glium_graphics::{ Glium2d, GliumGraphics, OpenGL };
+use input::{ Button, Key, MouseButton };
+use carboxyl::{ CellCycle, Cell };
+use carboxyl_window::{ GliumWindow, Window, ButtonState, ButtonEvent };
 
-    let display = glutin::WindowBuilder::new()
-        .with_dimensions(300, 300)
-        .with_title(format!("Image test"))
-        .build_glium().unwrap();
 
-    let window = GliumWindow::new(display, 60);
+#[derive(Clone, Debug)]
+enum RectEvent {
+    Spawn(Rect),
+    Drag(usize, (i32, i32)),
+    Drop,
+}
+
+
+#[derive(Clone, Debug)]
+struct Rect(i32, i32);
+
+impl Rect {
+    pub fn contains(&self, pos: (i32, i32)) -> bool {
+           (pos.0 > self.0 - 50)
+        && (pos.0 < self.0 + 50)
+        && (pos.1 > self.1 - 50)
+        && (pos.1 < self.1 + 50)
+    }
+}
+
+
+fn app_logic(window: &GliumWindow) -> Cell<Vec<Rect>> {
     let buttons = window.buttons();
     let cursor = window.cursor();
 
@@ -75,8 +89,18 @@ fn main() {
         }})
         .hold(spawned.clone())
         .switch();
-    let rects = rects.define(new_rects);
+    rects.define(new_rects)
+}
 
+
+fn main() {
+    let display = glutin::WindowBuilder::new()
+        .with_dimensions(300, 300)
+        .with_title(format!("Image test"))
+        .build_glium().unwrap();
+
+    let window = GliumWindow::new(display, 60);
+    let rects = app_logic(&window);
     let scene = lift!(|s, r| (s, r), &window.size(), &rects);
 
     window.run(|display| {
@@ -99,24 +123,4 @@ fn main() {
         }
         target.finish();
     });
-}
-
-#[derive(Clone, Debug)]
-enum RectEvent {
-    Spawn(Rect),
-    Drag(usize, (i32, i32)),
-    Drop,
-}
-
-
-#[derive(Clone, Debug)]
-struct Rect(i32, i32);
-
-impl Rect {
-    pub fn contains(&self, pos: (i32, i32)) -> bool {
-           (pos.0 > self.0 - 50)
-        && (pos.0 < self.0 + 50)
-        && (pos.1 > self.1 - 50)
-        && (pos.1 < self.1 + 50)
-    }
 }
