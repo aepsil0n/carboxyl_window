@@ -5,10 +5,12 @@ extern crate glutin;
 extern crate glium;
 extern crate input;
 extern crate glutin_window;
+extern crate graphics;
+extern crate glium_graphics;
 
 pub use button::*;
 pub use glium_impl::GliumWindow;
-use carboxyl::{Stream, Cell};
+use carboxyl::{ Stream, Cell };
 
 mod glium_impl;
 mod button;
@@ -16,9 +18,6 @@ mod button;
 
 /// An abstraction of window I/O.
 pub trait Window {
-    /// Stream of discrete time intervals (ticks).
-    fn ticks(&self) -> Stream<u64>;
-
     /// Position of the window
     fn position(&self) -> Cell<(i32, i32)>;
 
@@ -39,7 +38,4 @@ pub trait Window {
 
     /// Window focus
     fn focus(&self) -> Cell<bool>;
-
-    /// Start the application logic.
-    fn start(&self);
 }

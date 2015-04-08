@@ -10,19 +10,20 @@ extern crate carboxyl_window;
 
 
 fn main() {
-    use glium::{DisplayBuild, Surface};
-    use glium_graphics::{GliumBackendSystem, GliumSurfaceBackEnd};
-    use graphics::Context;
-    use input::{Button, Key, MouseButton};
+    use glium::{ DisplayBuild, Surface };
+    use glium_graphics::{ Glium2d, GliumGraphics, OpenGL };
+    use input::{ Button, Key, MouseButton };
     use carboxyl::CellCycle;
-    use carboxyl_window::{GliumWindow, Window, ButtonState, ButtonEvent};
+    use carboxyl_window::{ GliumWindow, Window, ButtonState, ButtonEvent };
+    use std::thread;
+    use std::sync::mpsc;
 
     let display = glutin::WindowBuilder::new()
         .with_dimensions(300, 300)
         .with_title(format!("Image test"))
         .build_glium().unwrap();
 
-    let window = GliumWindow::new(display.clone(), 60);
+    let window = GliumWindow::new(display, 60);
     let buttons = window.buttons();
     let cursor = window.cursor();
 
@@ -76,27 +77,28 @@ fn main() {
         .switch();
     let rects = rects.define(new_rects);
 
-    let _render = lift!(|s, r| (s, r), &window.size(), &rects)
-        .snapshot(&window.ticks())
-        .map(move |(((w, h), rects), _dt)| {
-            let mut target = display.draw();
-            {
-                let mut backend_sys = GliumBackendSystem::new(&display);
-                let mut backend = GliumSurfaceBackEnd::new(&mut backend_sys, &mut target);
-                let context = Context::abs(w as f64, h as f64);
-                graphics::clear([1.0; 4], &mut backend);
-                for rect in rects {
-                    graphics::Rectangle::new([1.0, 0.3, 0.0, 0.7])
-                    .draw(
-                        [(rect.0 - 50) as f64, (rect.1 - 50) as f64, 100.0, 100.0],
-                        &context, &mut backend
-                    )
-                }
-            }
-            target.finish();
-        });
+    let scene = lift!(|s, r| (s, r), &window.size(), &rects);
 
-    window.start();
+    window.run(|display| {
+        let ((w, h), rects) = scene.sample();
+        let mut target = display.draw();
+        {
+            let mut backend_sys = Glium2d::new(OpenGL::_3_2, &display);
+            let mut backend = GliumGraphics::new(&mut backend_sys, &mut target);
+            let transform = graphics::abs_transform(w as f64, h as f64);
+            graphics::clear([1.0; 4], &mut backend);
+            for rect in rects {
+                graphics::Rectangle::new([1.0, 0.3, 0.0, 0.7])
+                .draw(
+                    [(rect.0 - 50) as f64, (rect.1 - 50) as f64, 100.0, 100.0],
+                    graphics::default_draw_state(),
+                    transform,
+                    &mut backend
+                )
+            }
+        }
+        target.finish();
+    });
 }
 
 #[derive(Clone, Debug)]
