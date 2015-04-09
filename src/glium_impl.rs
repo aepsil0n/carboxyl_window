@@ -100,13 +100,16 @@ impl GliumWindow {
                 let diff = time - next_tick;
                 let delta = diff - diff % self.tick_length;
                 next_tick += delta;
-                for ev in self.display.poll_events() { tx.send(ev); }
+                for ev in self.display.poll_events() {
+                    let _ = tx.send(ev);
+                }
                 render(&self.display);
             }
             else {
                 thread::sleep_ms((next_tick - time) as u32);
             }
         }
+        event_thread.join();
     }
 }
 

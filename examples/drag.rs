@@ -112,8 +112,7 @@ fn main() {
             let transform = graphics::abs_transform(w as f64, h as f64);
             graphics::clear([1.0; 4], &mut backend);
             for rect in rects {
-                graphics::Rectangle::new([1.0, 0.3, 0.0, 0.7])
-                .draw(
+                graphics::Rectangle::new([1.0, 0.3, 0.0, 0.7]).draw(
                     [(rect.0 - 50) as f64, (rect.1 - 50) as f64, 100.0, 100.0],
                     graphics::default_draw_state(),
                     transform,
