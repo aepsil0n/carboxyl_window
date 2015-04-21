@@ -1,23 +1,20 @@
 #[macro_use(lift)]
 extern crate carboxyl;
 extern crate clock_ticks;
-extern crate glutin;
-extern crate glium;
 extern crate input;
-extern crate glutin_window;
-extern crate graphics;
-extern crate glium_graphics;
+extern crate window;
 
 pub use button::*;
-pub use glium_impl::GliumWindow;
+pub use wrapper::WindowWrapper;
+
 use carboxyl::{ Stream, Cell };
 
-mod glium_impl;
 mod button;
+mod wrapper;
 
 
 /// An abstraction of window I/O.
-pub trait Window {
+pub trait StreamingWindow {
     /// Position of the window
     fn position(&self) -> Cell<(i32, i32)>;
 
@@ -28,13 +25,13 @@ pub trait Window {
     fn buttons(&self) -> Stream<ButtonEvent>;
 
     /// A stream of characters received by the window
-    fn characters(&self) -> Stream<char>;
+    fn text(&self) -> Stream<String>;
 
     /// Position of the mouse cursor
-    fn cursor(&self) -> Cell<(i32, i32)>;
+    fn cursor(&self) -> Cell<(f64, f64)>;
 
     /// Position of the mouse wheel
-    fn wheel(&self) -> Cell<i32>;
+    fn wheel(&self) -> Cell<(f64, f64)>;
 
     /// Window focus
     fn focus(&self) -> Cell<bool>;
