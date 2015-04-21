@@ -12,17 +12,30 @@ license = "LGPL-3.0+"
 
 [dependencies]
 carboxyl = "*"
-glutin = "*"
 image = "*"
-pistoncore-input = "*"
-piston2d-graphics = "*"
 clock_ticks = "*"
 
-[dependencies.glium]
-default-features = false
+[dependencies.pistoncore-input]
+git = "https://github.com/PistonDevelopers/input"
 
-[dependencies.pistoncore-glutin_window]
+[dependencies.pistoncore-window]
+git = "https://github.com/PistonDevelopers/window"
+
+
+[dev-dependencies]
+glutin = "*"
+
+[dev-dependencies.shader_version]
+git = "https://github.com/PistonDevelopers/shader_version"
+
+[dev-dependencies.pistoncore-glutin_window]
 git = "https://github.com/PistonDevelopers/glutin_window"
 
-[dependencies.glium_graphics]
+[dev-dependencies.piston2d-graphics]
+git = "https://github.com/PistonDevelopers/graphics"
+
+[dev-dependencies.glium]
+default-features = false
+
+[dev-dependencies.glium_graphics]
 git = "https://github.com/PistonDevelopers/glium_graphics"
