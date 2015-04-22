@@ -1,10 +1,8 @@
 extern crate elmesque;
 extern crate graphics;
 extern crate glium;
-extern crate glutin;
 extern crate glium_graphics;
 extern crate shader_version;
-extern crate image;
 extern crate input;
 extern crate window;
 extern crate glutin_window;
