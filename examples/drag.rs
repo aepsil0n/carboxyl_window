@@ -83,13 +83,12 @@ fn find_index(pos: (f64, f64), rects: &Vec<Rect>) -> Option<usize> {
 /// How the rects behave while dragging
 fn drag_cell(pos: (f64, f64), start: Vec<Rect>, cursor: &Cell<(f64, f64)>) -> Cell<Vec<Rect>> {
     match find_index(pos, &start) {
-        Some(idx) => lift!(
-            move |(x, y)| start.iter()
-                .enumerate()
-                .map(|(k, &rect)| if k == idx { Rect(x, y) } else { rect })
-                .collect(),
-            cursor
-        ),
+        Some(idx) => lift!(move |(x, y)| {
+            let mut start = start.clone();
+            let Rect(x0, y0) = start[idx];
+            start[idx] = Rect(x0 + (x - pos.0), y0 + (y - pos.1));
+            start
+        }, cursor),
         None => Stream::never().hold(start),
     }
 }
