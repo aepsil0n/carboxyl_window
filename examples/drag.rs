@@ -38,14 +38,12 @@ impl Rect {
     }
 }
 
-
 /// A drag & drop event
 #[derive(Clone, Debug)]
 enum Pick {
     Drag((f64, f64)),
     Drop,
 }
-
 
 /// Reactive drag & drop logic
 fn drag_n_drop(position: &Cell<(f64, f64)>, clicks: &Stream<ButtonState>)
@@ -66,7 +64,6 @@ fn left_clicks(event: ButtonEvent) -> Option<ButtonState> {
         _   => None,
     }
 }
-
 
 /// Has space been pressed?
 fn space_pressed(event: &ButtonEvent) -> bool {
@@ -97,38 +94,59 @@ fn drag_cell(pos: (f64, f64), start: Vec<Rect>, cursor: &Cell<(f64, f64)>) -> Ce
     }
 }
 
+/// Stream of rects spawned
+fn spawned_rects(cursor: &Cell<(f64, f64)>, buttons: &Stream<ButtonEvent>)
+    -> Stream<Rect>
+{
+    cursor.snapshot(&buttons.filter(space_pressed))
+        .map(|(pos, _)| Rect(pos.0, pos.1))
+}
+
 /// Overall application logic
 fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Vec<Rect>> {
+    // Bind relevant window attributes
     let buttons = window.buttons();
     let cursor = window.cursor();
+
+    // The drag & drop event stream
     let picks = drag_n_drop(
         &lift!(|(x, y)| (x as f64, y as f64), &cursor),
         &buttons.filter_map(left_clicks)
     );
 
-    let spawns = cursor.snapshot(&buttons.filter(space_pressed))
-        .map(|(pos, _)| Rect(pos.0, pos.1));
-
+    // Forward declaration of the output cell
     let rects: CellCycle<Vec<Rect>> = CellCycle::new(vec![]);
 
-    let drag_drop_cell = rects.snapshot(&picks)
-        .map(move |(rects, pick)| match pick {
-            Pick::Drag(pos) => drag_cell(pos, rects, &cursor),
-            Pick::Drop => Stream::never().hold(rects),
-        });
+    // Behaviour initiated by drag & drop events
+    let drag_drop_cell = {
+        let cursor = cursor.clone();
+        rects.snapshot(&picks)
+            .map(move |(rects, pick)| match pick {
+                Pick::Drag(pos) => drag_cell(pos, rects, &cursor),
+                Pick::Drop => Stream::never().hold(rects),
+            })
+    };
 
-    let spawn_cell = rects.snapshot(&spawns)
+    // Behaviour initiated by spawn events
+    let spawn_cell = rects
+        .snapshot(&spawned_rects(&cursor, &buttons))
         .map(|(mut rects, r)| {
             rects.push(r);
             Stream::never().hold(rects)
         });
 
-    let new_rects = drag_drop_cell.merge(&spawn_cell)
+    // Now define the output cell
+    rects.define(
+        // Merge the cell streams
+        drag_drop_cell.merge(&spawn_cell)
+        // Hold onto an initial cell with no rects
         .hold(Stream::never().hold(vec![]))
-        .switch();
-    rects.define(new_rects)
+        // And switch to flatten this to a cell of rects
+        .switch()
+    )
 }
 
+/// Functional view of a vector of rects
 fn view((width, height): (u32, u32), rects: &Vec<Rect>) -> Form {
     use elmesque::color::rgba;
     use elmesque::form::{ group, rect };
