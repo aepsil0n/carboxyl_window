@@ -18,87 +18,113 @@ use glium_graphics::{ Glium2d, GliumGraphics, GliumWindow, GlyphCache };
 use glutin_window::GlutinWindow;
 use window::WindowSettings;
 use input::{ Button, Key, MouseButton };
-use carboxyl::{ CellCycle, Cell };
+use carboxyl::{ CellCycle, Cell, Stream };
 use carboxyl_window::{ StreamingWindow, WindowWrapper, ButtonState,
                        ButtonEvent };
 use shader_version::OpenGL;
 use elmesque::{ Form, Renderer };
 
 
-#[derive(Clone, Debug)]
-enum RectEvent {
-    Spawn(Rect),
-    Drag(usize, (i32, i32)),
-    Drop,
-}
-
-
-#[derive(Clone, Debug)]
-struct Rect(i32, i32);
+/// One of little rectangles making up the application model
+#[derive(Copy, Clone, Debug)]
+struct Rect(f64, f64);
 
 impl Rect {
-    pub fn contains(&self, pos: (i32, i32)) -> bool {
-           (pos.0 > self.0 - 50)
-        && (pos.0 < self.0 + 50)
-        && (pos.1 > self.1 - 50)
-        && (pos.1 < self.1 + 50)
+    /// Does the rectangle contain a given position?
+    pub fn contains(&self, (x, y): (f64, f64)) -> bool {
+        let Rect(x0, y0) = *self;
+           (x > x0 - 50.0) && (x < x0 + 50.0)
+        && (y > y0 - 50.0) && (y < y0 + 50.0)
     }
 }
 
 
+/// A drag & drop event
+#[derive(Clone, Debug)]
+enum Pick {
+    Drag((f64, f64)),
+    Drop,
+}
+
+
+/// Reactive drag & drop logic
+fn drag_n_drop(position: &Cell<(f64, f64)>, clicks: &Stream<ButtonState>)
+    -> Stream<Pick>
+{
+    position.snapshot(&clicks)
+        .map(|(pos, state)| match state {
+            ButtonState::Pressed => Pick::Drag(pos),
+            ButtonState::Released => Pick::Drop,
+        })
+}
+
+/// Filter left clicks from a button event
+fn left_clicks(event: ButtonEvent) -> Option<ButtonState> {
+    match event {
+        ButtonEvent { button: Button::Mouse(MouseButton::Left), state }
+            => Some(state),
+        _   => None,
+    }
+}
+
+
+/// Has space been pressed?
+fn space_pressed(event: &ButtonEvent) -> bool {
+    event.button == Button::Keyboard(Key::Space) &&
+    event.state == ButtonState::Pressed
+}
+
+/// Find the index of the first in a list of rects containing a point
+fn find_index(pos: (f64, f64), rects: &Vec<Rect>) -> Option<usize> {
+    rects.iter().enumerate()
+        .filter_map(|(k, r)|
+            if r.contains(pos) { Some(k) }
+            else { None }
+        ).next()
+}
+
+/// How the rects behave while dragging
+fn drag_cell(pos: (f64, f64), start: Vec<Rect>, cursor: &Cell<(f64, f64)>) -> Cell<Vec<Rect>> {
+    match find_index(pos, &start) {
+        Some(idx) => lift!(
+            move |(x, y)| start.iter()
+                .enumerate()
+                .map(|(k, &rect)| if k == idx { Rect(x, y) } else { rect })
+                .collect(),
+            cursor
+        ),
+        None => Stream::never().hold(start),
+    }
+}
+
+/// Overall application logic
 fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Vec<Rect>> {
     let buttons = window.buttons();
     let cursor = window.cursor();
+    let picks = drag_n_drop(
+        &lift!(|(x, y)| (x as f64, y as f64), &cursor),
+        &buttons.filter_map(left_clicks)
+    );
 
-    let rects = CellCycle::<Vec<Rect>>::new(vec![Rect(100, 100)]);
+    let spawns = cursor.snapshot(&buttons.filter(space_pressed))
+        .map(|(pos, _)| Rect(pos.0, pos.1));
 
-    let events = lift!(|c, r| (c, r), &cursor, &rects)
-        .snapshot(&buttons)
-        .filter_map(|((pos, rects), button)| match button {
-            ButtonEvent {
-                button: Button::Keyboard(Key::Space),
-                state: ButtonState::Pressed,
-            }
-                => Some(RectEvent::Spawn(Rect(pos.0 as i32, pos.1 as i32))),
-            ButtonEvent { button: Button::Mouse(MouseButton::Left), state: ButtonState::Pressed }
-                => rects.iter()
-                    .enumerate()
-                    .filter_map(|(k, r)| {
-                        let pos = (pos.0 as i32, pos.1 as i32);
-                        if r.contains(pos) { Some(RectEvent::Drag(k, pos)) }
-                        else { None }
-                    })
-                    .next(),
-            ButtonEvent { button: Button::Mouse(MouseButton::Left), state: ButtonState::Released }
-                => Some(RectEvent::Drop),
-            _   => None,
+    let rects: CellCycle<Vec<Rect>> = CellCycle::new(vec![]);
+
+    let drag_drop_cell = rects.snapshot(&picks)
+        .map(move |(rects, pick)| match pick {
+            Pick::Drag(pos) => drag_cell(pos, rects, &cursor),
+            Pick::Drop => Stream::never().hold(rects),
         });
 
-    let spawned = rects.snapshot(&events)
-        .map(|(mut rects, ev)| match ev {
-            RectEvent::Spawn(r) => { rects.push(r); rects },
-            _ => rects,
-        })
-        .hold(vec![Rect(0, 0)]);
+    let spawn_cell = rects.snapshot(&spawns)
+        .map(|(mut rects, r)| {
+            rects.push(r);
+            Stream::never().hold(rects)
+        });
 
-    let new_rects = events.filter_map({
-        let spawned = spawned.clone();
-        move |ev| match ev {
-            RectEvent::Drag(idx, pos) => {
-            Some(lift!(
-                move |mut rects, mouse| {
-                    rects[idx] = Rect(
-                        rects[idx].0 + (mouse.0 as i32 - pos.0),
-                        rects[idx].1 + (mouse.1 as i32 - pos.1)
-                    );
-                    rects
-                },
-                &spawned, &cursor
-            ))},
-            RectEvent::Drop => Some(spawned.clone()),
-            _ => None,
-        }})
-        .hold(spawned.clone())
+    let new_rects = drag_drop_cell.merge(&spawn_cell)
+        .hold(Stream::never().hold(vec![]))
         .switch();
     rects.define(new_rects)
 }
@@ -130,7 +156,7 @@ fn main() {
         OpenGL::_3_2,
         WindowSettings::new("Title", (1920, 1080))
     )));
-    let window = WindowWrapper::new(glutin_window.clone(), 60);
+    let window = WindowWrapper::new(glutin_window.clone(), 10_000_000);
     let model = app_logic(&window);
     let scene = lift!(|s, r| (s, view(s, &r)), &window.size(), &model);
     let glium_window = GliumWindow::new(&glutin_window).unwrap();
