@@ -119,7 +119,8 @@ impl<W> StreamingWindow for WindowWrapper<W> {
     }
 
     fn wheel(&self) -> Cell<(f64, f64)> {
-        self.sinks.mouse_wheel.stream().hold((0.0, 0.0))
+        self.sinks.mouse_wheel.stream()
+            .scan((0.0, 0.0), |(x, y), (dx, dy)| (x + dx, y + dy))
     }
 
     fn focus(&self) -> Cell<bool> {
