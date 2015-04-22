@@ -1,5 +1,4 @@
 [package]
-
 name = "carboxyl_window"
 version = "0.0.1"
 authors = ["Eduard Bopp <eduard.bopp@aepsil0n.de>"]
@@ -9,6 +8,7 @@ repository = "https://github.com/aepsil0n/carboxyl_window"
 readme = "README.md"
 keywords = ["frp", "reactive", "event", "window"]
 license = "LGPL-3.0+"
+
 
 [dependencies]
 carboxyl = "*"
