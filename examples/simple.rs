@@ -75,7 +75,7 @@ fn main() {
 
     let glutin_window = Rc::new(RefCell::new(GlutinWindow::new(
         OpenGL::_3_2,
-        WindowSettings::new("Title", (1920, 1080))
+        WindowSettings::new("carboxyl_window :: example/simple.rs", (640, 480))
     )));
     let window = WindowWrapper::new(glutin_window.clone(), 10_000_000);
     let scene = lift!(|s, m| (s, view(m)), &window.size(), &app_logic(&window));
