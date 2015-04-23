@@ -1,3 +1,14 @@
+//! Mouse drag & drop demo application
+//!
+//! This example demonstrates how to build complex event handling logic using
+//! Carboxyl's primitives in a practical application. Elmesque is used for
+//! visualization.
+//!
+//! # Controls
+//!
+//! - SPACE: spawn a square
+//! - Left mouse button: drag & drop squares around
+
 extern crate elmesque;
 extern crate graphics;
 extern crate glium;

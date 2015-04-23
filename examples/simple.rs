@@ -1,3 +1,13 @@
+//! Simple interactive application
+//!
+//! This example is very simple. You can move around a circle that follows the
+//! mouse position. Using the mouse cursor you can change the color of the
+//! circle and a little number displayed on its center.
+//!
+//! The event handling logic here is trivial, since the output is a very simple
+//! function of input events. It is intended to demonstrate how you can set up
+//! an application using carboxyl, carboxyl_window and elmesque.
+
 extern crate elmesque;
 extern crate graphics;
 extern crate glium;
