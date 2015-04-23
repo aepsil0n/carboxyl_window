@@ -45,7 +45,7 @@ fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Model> {
 }
 
 /// A functional view
-fn view((width, height): (u32, u32), model: Model) -> Form {
+fn view(model: Model) -> Form {
     use elmesque::form::{ group, circle, text };
     use elmesque::text::Text;
     let (x, y) = model.position;
@@ -54,10 +54,7 @@ fn view((width, height): (u32, u32), model: Model) -> Form {
         text(Text::from_string(model.text)
             .color(rgb(1.0, 1.0, 1.0))),
     ])
-    .shift(
-        -(width as f64 / 2.0) + x as f64,
-        height as f64 / 2.0 - y as f64
-    )
+    .shift(x as f64, -y as f64)
 }
 
 
@@ -71,11 +68,7 @@ fn main() {
         WindowSettings::new("Title", (1920, 1080))
     )));
     let window = WindowWrapper::new(glutin_window.clone(), 10_000_000);
-    let scene = lift!(
-        |s, m| (s, view(s, m)),
-        &window.size(),
-        &app_logic(&window)
-    );
+    let scene = lift!(|s, m| (s, view(m)), &window.size(), &app_logic(&window));
     let glium_window = GliumWindow::new(&glutin_window).unwrap();
     let mut backend_sys = Glium2d::new(OpenGL::_3_2, &glium_window);
     let mut glyph_cache = GlyphCache::new(
@@ -85,6 +78,10 @@ fn main() {
 
     window.run(|| {
         let ((w, h), form) = scene.sample();
+        let form = form.shift(
+            -(w as f64 / 2.0),
+            h as f64 / 2.0
+        );
         let mut target = glium_window.draw();
         {
             let mut backend = GliumGraphics::new(&mut backend_sys, &mut target);

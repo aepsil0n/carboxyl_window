@@ -144,7 +144,7 @@ fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Vec<Rect>> {
 }
 
 /// Functional view of a vector of rects
-fn view((width, height): (u32, u32), rects: &Vec<Rect>) -> Form {
+fn view(rects: &Vec<Rect>) -> Form {
     use elmesque::color::rgba;
     use elmesque::form::{ group, rect };
     group(
@@ -152,10 +152,7 @@ fn view((width, height): (u32, u32), rects: &Vec<Rect>) -> Form {
         .map(|&Rect(x, y)|
             rect(100.0, 100.0)
             .filled(rgba(1.0, 0.3, 0.0, 0.7))
-            .shift(
-                -(width as f64 / 2.0) + x as f64,
-                height as f64 / 2.0 - y as f64
-            )
+            .shift(x as f64, -y as f64)
         )
         .collect()
     )
@@ -173,7 +170,7 @@ fn main() {
     )));
     let window = WindowWrapper::new(glutin_window.clone(), 10_000_000);
     let model = app_logic(&window);
-    let scene = lift!(|s, r| (s, view(s, &r)), &window.size(), &model);
+    let scene = lift!(|s, r| (s, view(&r)), &window.size(), &model);
     let glium_window = GliumWindow::new(&glutin_window).unwrap();
     let mut backend_sys = Glium2d::new(OpenGL::_3_2, &glium_window);
     let mut glyph_cache = GlyphCache::new(
@@ -183,6 +180,10 @@ fn main() {
 
     window.run(|| {
         let ((w, h), form) = scene.sample();
+        let form = form.shift(
+            -(w as f64 / 2.0),
+            h as f64 / 2.0
+        );
         let mut target = glium_window.draw();
         {
             let mut backend = GliumGraphics::new(&mut backend_sys, &mut target);
