@@ -20,15 +20,13 @@ extern crate glutin_window;
 extern crate carboxyl;
 extern crate carboxyl_window;
 
-use glium::Surface;
-use glium_graphics::{ Glium2d, GliumGraphics, GliumWindow, GlyphCache };
-use glutin_window::GlutinWindow;
 use window::WindowSettings;
 use carboxyl::Cell;
-use carboxyl_window::{ StreamingWindow, WindowWrapper };
-use shader_version::OpenGL;
-use elmesque::{ Form, Renderer };
-use elmesque::color::{ Color, rgb, hsl };
+use carboxyl_window::StreamingWindow;
+use elmesque::Element;
+use elmesque::color::Color;
+
+mod runners;
 
 
 #[derive(Clone, Debug)]
@@ -41,6 +39,8 @@ struct Model {
 
 /// Some trivial application logic
 fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Model> {
+    use elmesque::color::hsl;
+
     lift!(
         |pos, wheel| {
             Model {
@@ -55,52 +55,27 @@ fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Model> {
 }
 
 /// A functional view
-fn view(model: Model) -> Form {
-    use elmesque::form::{ group, circle, text };
+fn view((width, height): (u32, u32), model: Model) -> Element {
+    use elmesque::form::{ collage, group, circle, text };
     use elmesque::text::Text;
+    use elmesque::color::{ rgb, black };
+
     let (x, y) = model.position;
-    group(vec![
-        circle(60.0).filled(model.color),
-        text(Text::from_string(model.text)
-            .color(rgb(1.0, 1.0, 1.0))),
+    collage(width as i32, height as i32, vec![
+        group(vec![
+            circle(60.0).filled(model.color),
+            text(Text::from_string(model.text)
+                .color(rgb(1.0, 1.0, 1.0))),
+        ])
+        .shift(x as f64, -y as f64)
+        .shift(-(width as f64 / 2.0), height as f64 / 2.0)
     ])
-    .shift(x as f64, -y as f64)
+    .clear(black())
 }
 
-
 fn main() {
-    use std::rc::Rc;
-    use std::cell::RefCell;
-    use std::path::Path;
-
-    let glutin_window = Rc::new(RefCell::new(GlutinWindow::new(
-        OpenGL::_3_2,
-        WindowSettings::new("carboxyl_window :: example/simple.rs", (640, 480))
-    )));
-    let window = WindowWrapper::new(glutin_window.clone(), 10_000_000);
-    let scene = lift!(|s, m| (s, view(m)), &window.size(), &app_logic(&window));
-    let glium_window = GliumWindow::new(&glutin_window).unwrap();
-    let mut backend_sys = Glium2d::new(OpenGL::_3_2, &glium_window);
-    let mut glyph_cache = GlyphCache::new(
-        &Path::new("./assets/NotoSans/NotoSans-Regular.ttf"),
-        glium_window.clone()
-    ).unwrap();
-
-    window.run(|| {
-        let ((w, h), form) = scene.sample();
-        let form = form.shift(
-            -(w as f64 / 2.0),
-            h as f64 / 2.0
-        );
-        let mut target = glium_window.draw();
-        {
-            let mut backend = GliumGraphics::new(&mut backend_sys, &mut target);
-            graphics::clear([0., 0., 0., 1.], &mut backend);
-            let mut renderer = Renderer::new(w as f64, h as f64, &mut backend)
-                .character_cache(&mut glyph_cache);
-            elmesque::form::collage(w as i32, h as i32, vec![form])
-                .draw(&mut renderer);
-        }
-        target.finish();
-    });
+    runners::run_glutin(
+        WindowSettings::new("carboxyl_window :: example/simple.rs", (640, 480)),
+        |window| lift!(view, &window.size(), &app_logic(window))
+    );
 }
