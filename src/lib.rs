@@ -7,7 +7,7 @@ extern crate window;
 pub use button::*;
 pub use wrapper::WindowWrapper;
 
-use carboxyl::{ Stream, Cell };
+use carboxyl::{ Stream, Signal };
 
 mod button;
 mod wrapper;
@@ -16,10 +16,10 @@ mod wrapper;
 /// An abstraction of window I/O.
 pub trait StreamingWindow {
     /// Position of the window
-    fn position(&self) -> Cell<(i32, i32)>;
+    fn position(&self) -> Signal<(i32, i32)>;
 
     /// Size of the window
-    fn size(&self) -> Cell<(u32, u32)>;
+    fn size(&self) -> Signal<(u32, u32)>;
 
     /// Stream of input events.
     fn buttons(&self) -> Stream<ButtonEvent>;
@@ -28,11 +28,11 @@ pub trait StreamingWindow {
     fn text(&self) -> Stream<String>;
 
     /// Position of the mouse cursor
-    fn cursor(&self) -> Cell<(f64, f64)>;
+    fn cursor(&self) -> Signal<(f64, f64)>;
 
     /// Position of the mouse wheel
-    fn wheel(&self) -> Cell<(f64, f64)>;
+    fn wheel(&self) -> Signal<(f64, f64)>;
 
     /// Window focus
-    fn focus(&self) -> Cell<bool>;
+    fn focus(&self) -> Signal<bool>;
 }

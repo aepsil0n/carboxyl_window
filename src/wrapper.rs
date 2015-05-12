@@ -2,7 +2,7 @@ use std::thread;
 use std::rc::Rc;
 use std::cell::RefCell;
 use clock_ticks::precise_time_ns;
-use carboxyl::{ Cell, Sink, Stream };
+use carboxyl::{ Signal, Sink, Stream };
 use input::Input;
 use button::{ ButtonEvent, ButtonState };
 use window::Window;
@@ -98,11 +98,11 @@ impl<W: Window<Event=Input>> WindowWrapper<W> {
 }
 
 impl<W> StreamingWindow for WindowWrapper<W> {
-    fn position(&self) -> Cell<(i32, i32)> {
+    fn position(&self) -> Signal<(i32, i32)> {
         self.sinks.window_position.stream().hold((0, 0))
     }
 
-    fn size(&self) -> Cell<(u32, u32)> {
+    fn size(&self) -> Signal<(u32, u32)> {
         self.sinks.window_size.stream().hold((0, 0))
     }
 
@@ -114,16 +114,16 @@ impl<W> StreamingWindow for WindowWrapper<W> {
         self.sinks.text.stream()
     }
 
-    fn cursor(&self) -> Cell<(f64, f64)> {
+    fn cursor(&self) -> Signal<(f64, f64)> {
         self.sinks.mouse_motion.stream().hold((0.0, 0.0))
     }
 
-    fn wheel(&self) -> Cell<(f64, f64)> {
+    fn wheel(&self) -> Signal<(f64, f64)> {
         self.sinks.mouse_wheel.stream()
             .scan((0.0, 0.0), |(x, y), (dx, dy)| (x + dx, y + dy))
     }
 
-    fn focus(&self) -> Cell<bool> {
+    fn focus(&self) -> Signal<bool> {
         self.sinks.focus.stream().hold(true)
     }
 }

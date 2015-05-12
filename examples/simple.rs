@@ -21,7 +21,7 @@ extern crate carboxyl;
 extern crate carboxyl_window;
 
 use window::WindowSettings;
-use carboxyl::Cell;
+use carboxyl::Signal;
 use carboxyl_window::StreamingWindow;
 use elmesque::Element;
 use elmesque::color::Color;
@@ -38,7 +38,7 @@ struct Model {
 
 
 /// Some trivial application logic
-fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Model> {
+fn app_logic<W: StreamingWindow>(window: &W) -> Signal<Model> {
     use elmesque::color::hsl;
 
     lift!(

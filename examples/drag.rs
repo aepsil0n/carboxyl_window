@@ -24,7 +24,7 @@ extern crate carboxyl_window;
 
 use window::WindowSettings;
 use input::{ Button, Key, MouseButton };
-use carboxyl::{ CellCycle, Cell, Stream };
+use carboxyl::{ SignalCycle, Signal, Stream };
 use carboxyl_window::{ StreamingWindow, ButtonState, ButtonEvent };
 use elmesque::Element;
 
@@ -51,7 +51,7 @@ enum Pick {
 }
 
 /// Reactive drag & drop logic
-fn drag_n_drop(position: &Cell<(f64, f64)>, clicks: &Stream<ButtonState>)
+fn drag_n_drop(position: &Signal<(f64, f64)>, clicks: &Stream<ButtonState>)
     -> Stream<Pick>
 {
     position.snapshot(&clicks)
@@ -86,7 +86,7 @@ fn find_index(pos: (f64, f64), rects: &Vec<Rect>) -> Option<usize> {
 }
 
 /// How the rects behave while dragging
-fn drag_cell(pos: (f64, f64), start: Vec<Rect>, cursor: &Cell<(f64, f64)>) -> Cell<Vec<Rect>> {
+fn drag_cell(pos: (f64, f64), start: Vec<Rect>, cursor: &Signal<(f64, f64)>) -> Signal<Vec<Rect>> {
     match find_index(pos, &start) {
         Some(idx) => lift!(move |(x, y)| {
             let mut start = start.clone();
@@ -99,7 +99,7 @@ fn drag_cell(pos: (f64, f64), start: Vec<Rect>, cursor: &Cell<(f64, f64)>) -> Ce
 }
 
 /// Stream of rects spawned
-fn spawned_rects(cursor: &Cell<(f64, f64)>, buttons: &Stream<ButtonEvent>)
+fn spawned_rects(cursor: &Signal<(f64, f64)>, buttons: &Stream<ButtonEvent>)
     -> Stream<Rect>
 {
     cursor.snapshot(&buttons.filter(space_pressed))
@@ -107,7 +107,7 @@ fn spawned_rects(cursor: &Cell<(f64, f64)>, buttons: &Stream<ButtonEvent>)
 }
 
 /// Overall application logic
-fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Vec<Rect>> {
+fn app_logic<W: StreamingWindow>(window: &W) -> Signal<Vec<Rect>> {
     // Bind relevant window attributes
     let buttons = window.buttons();
     let cursor = window.cursor();
@@ -119,7 +119,7 @@ fn app_logic<W: StreamingWindow>(window: &W) -> Cell<Vec<Rect>> {
     );
 
     // Forward declaration of the output cell
-    let rects: CellCycle<Vec<Rect>> = CellCycle::new(vec![]);
+    let rects: SignalCycle<Vec<Rect>> = SignalCycle::new();
 
     // Behaviour initiated by drag & drop events
     let drag_drop_cell = {

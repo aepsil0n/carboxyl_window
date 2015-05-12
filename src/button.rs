@@ -1,4 +1,4 @@
-use carboxyl::{Stream, Cell};
+use carboxyl::{ Stream, Signal };
 use input::Button;
 
 
@@ -12,7 +12,7 @@ pub enum ButtonState {
 impl ButtonState {
     /// Track the state of a button in a cell from a stream of button events.
     pub fn track(inputs: &Stream<ButtonEvent>, button: Button)
-        -> Cell<ButtonState>
+        -> Signal<ButtonState>
     {
         inputs
             .filter_map(move |event|
@@ -48,7 +48,7 @@ impl Direction {
 
     /// Track direction from a stream of button events in a cell.
     pub fn track(inputs: &Stream<ButtonEvent>, pos: Button, neg: Button)
-        -> Cell<Direction>
+        -> Signal<Direction>
     {
         lift!(
             Direction::from_buttons,
