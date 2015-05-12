@@ -37,7 +37,7 @@ git = "https://github.com/PistonDevelopers/graphics"
 [dev-dependencies.glium]
 default-features = false
 
-[dev-dependencies.glium_graphics]
+[dev-dependencies.piston2d-glium_graphics]
 git = "https://github.com/PistonDevelopers/glium_graphics"
 
 [dev-dependencies.elmesque]
