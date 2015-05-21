@@ -6,6 +6,7 @@ use carboxyl::Signal;
 use elmesque::{ Element, Renderer };
 use shader_version::OpenGL;
 use window::WindowSettings;
+use graphics::context::Context;
 
 pub fn run_glutin<F>(settings: WindowSettings, app: F)
     where F: FnOnce(&WindowWrapper<GlutinWindow>) -> Signal<Element>,
@@ -31,7 +32,7 @@ pub fn run_glutin<F>(settings: WindowSettings, app: F)
         let mut target = glium_window.draw();
         {
             let mut backend = GliumGraphics::new(&mut backend_sys, &mut target);
-            let mut renderer = Renderer::new(w as f64, h as f64, &mut backend)
+            let mut renderer = Renderer::new(Context::abs(w as f64, h as f64), &mut backend)
                 .character_cache(&mut glyph_cache);
             element.draw(&mut renderer);
         }

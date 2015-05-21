@@ -24,7 +24,7 @@ extern crate carboxyl_window;
 
 use window::WindowSettings;
 use input::{ Button, Key, MouseButton };
-use carboxyl::{ SignalCycle, Signal, Stream };
+use carboxyl::{ Signal, Stream };
 use carboxyl_window::{ StreamingWindow, ButtonState, ButtonEvent };
 use elmesque::Element;
 
@@ -54,11 +54,10 @@ enum Pick {
 fn drag_n_drop(position: &Signal<(f64, f64)>, clicks: &Stream<ButtonState>)
     -> Stream<Pick>
 {
-    position.snapshot(&clicks)
-        .map(|(pos, state)| match state {
-            ButtonState::Pressed => Pick::Drag(pos),
-            ButtonState::Released => Pick::Drop,
-        })
+    position.snapshot(&clicks, |pos, state| match state {
+        ButtonState::Pressed => Pick::Drag(pos),
+        ButtonState::Released => Pick::Drop,
+    })
 }
 
 /// Filter left clicks from a button event
@@ -102,8 +101,10 @@ fn drag_cell(pos: (f64, f64), start: Vec<Rect>, cursor: &Signal<(f64, f64)>) -> 
 fn spawned_rects(cursor: &Signal<(f64, f64)>, buttons: &Stream<ButtonEvent>)
     -> Stream<Rect>
 {
-    cursor.snapshot(&buttons.filter(space_pressed))
-        .map(|(pos, _)| Rect(pos.0, pos.1))
+    cursor.snapshot(
+        &buttons.filter(space_pressed),
+        |pos, _| Rect(pos.0, pos.1)
+    )
 }
 
 /// Overall application logic
@@ -118,36 +119,34 @@ fn app_logic<W: StreamingWindow>(window: &W) -> Signal<Vec<Rect>> {
         &buttons.filter_map(left_clicks)
     );
 
-    // Forward declaration of the output cell
-    let rects: SignalCycle<Vec<Rect>> = SignalCycle::new();
+    // Define rectangles self-referentially
+    Signal::<Vec<Rect>>::cyclic(|rects| {
 
-    // Behaviour initiated by drag & drop events
-    let drag_drop_cell = {
-        let cursor = cursor.clone();
-        rects.snapshot(&picks)
-            .map(move |(rects, pick)| match pick {
+        // Behaviour initiated by drag & drop events
+        let drag_drop_cell = {
+            let cursor = cursor.clone();
+            rects.snapshot(&picks, move |rects, pick| match pick {
                 Pick::Drag(pos) => drag_cell(pos, rects, &cursor),
                 Pick::Drop => Stream::never().hold(rects),
             })
-    };
+        };
 
-    // Behaviour initiated by spawn events
-    let spawn_cell = rects
-        .snapshot(&spawned_rects(&cursor, &buttons))
-        .map(|(mut rects, r)| {
-            rects.push(r);
-            Stream::never().hold(rects)
-        });
+        // Behaviour initiated by spawn events
+        let spawn_cell = rects.snapshot(
+            &spawned_rects(&cursor, &buttons),
+            |mut rects, r| {
+                rects.push(r);
+                Stream::never().hold(rects)
+            }
+        );
 
-    // Now define the output cell
-    rects.define(
         // Merge the cell streams
         drag_drop_cell.merge(&spawn_cell)
         // Hold onto an initial cell with no rects
         .hold(Stream::never().hold(vec![]))
         // And switch to flatten this to a cell of rects
         .switch()
-    )
+    })
 }
 
 /// Functional view of a vector of rects
