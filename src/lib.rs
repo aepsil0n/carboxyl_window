@@ -5,15 +5,15 @@ extern crate input;
 extern crate window;
 
 pub use button::*;
-pub use wrapper::WindowWrapper;
+pub use source_win::{ EventSource, SourceWindow };
 
 use carboxyl::{ Stream, Signal };
 
 mod button;
-mod wrapper;
+mod source_win;
 
 
-/// An abstraction of window I/O.
+/// An abstraction of window input events.
 pub trait StreamingWindow {
     /// Position of the window
     fn position(&self) -> Signal<(i32, i32)>;

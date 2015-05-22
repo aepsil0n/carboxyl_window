@@ -5,7 +5,7 @@ use clock_ticks::precise_time_ns;
 use carboxyl::{ Signal, Sink, Stream };
 use input::Input;
 use button::{ ButtonEvent, ButtonState };
-use window::Window;
+use window;
 use ::StreamingWindow;
 
 
@@ -47,22 +47,46 @@ impl EventSinks {
 }
 
 
-/// Glium implementation of an application loop.
-pub struct WindowWrapper<W> {
-    window: Rc<RefCell<W>>,
+/// A source of window events.
+///
+/// Normally this will be a window handle. This has a minimal API to allow for
+/// any kind of other object, too. It is hard-coded to work with piston input
+/// events, as it should be easy to convert to those for a given backend.
+pub trait EventSource {
+    /// Should the window close?
+    fn should_close(&self) -> bool;
+
+    /// Poll an event if available (non-blocking).
+    fn poll_event(&mut self) -> Option<Input>;
+}
+
+impl<W: window::Window<Event=Input>> EventSource for Rc<RefCell<W>> {
+    fn should_close(&self) -> bool {
+        self.borrow().should_close()
+    }
+
+    fn poll_event(&mut self) -> Option<Input> {
+        self.borrow_mut().poll_event()
+    }
+}
+
+
+/// A reactive window implementation generic over the event source.
+pub struct SourceWindow<S> {
+    source: S,
     tick_length: u64,
     sinks: EventSinks,
 }
 
-impl<W: Window<Event=Input>> WindowWrapper<W> {
+impl<S: EventSource> SourceWindow<S> {
     /// Create a new Glium loop.
     ///
     /// # Parameters
     ///
     /// `tick_length` is the minimum duration of a tick in nanoseconds.
-    pub fn new(window: Rc<RefCell<W>>, tick_length: u64) -> WindowWrapper<W> {
-        WindowWrapper {
-            window: window,
+    pub fn new(source: S, tick_length: u64) -> SourceWindow<S> {
+        SourceWindow {
+            source: source,
             tick_length: tick_length,
             sinks: EventSinks {
                 button: Sink::new(),
@@ -76,16 +100,16 @@ impl<W: Window<Event=Input>> WindowWrapper<W> {
         }
     }
 
-    pub fn run<F: FnMut()>(&self, mut render: F) {
+    pub fn run<F: FnMut()>(&mut self, mut render: F) {
         let mut time = precise_time_ns();
         let mut next_tick = time;
-        while !self.window.borrow().should_close() {
+        while !self.source.should_close() {
             time = precise_time_ns();
             if time >= next_tick {
                 let diff = time - next_tick;
                 let delta = diff - diff % self.tick_length;
                 next_tick += delta;
-                while let Some(event) = self.window.borrow_mut().poll_event() {
+                while let Some(event) = self.source.poll_event() {
                     let _ = self.sinks.dispatch(event);
                 }
                 render();
@@ -97,7 +121,7 @@ impl<W: Window<Event=Input>> WindowWrapper<W> {
     }
 }
 
-impl<W> StreamingWindow for WindowWrapper<W> {
+impl<S> StreamingWindow for SourceWindow<S> {
     fn position(&self) -> Signal<(i32, i32)> {
         self.sinks.window_position.stream().hold((0, 0))
     }
