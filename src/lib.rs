@@ -36,3 +36,13 @@ pub trait StreamingWindow {
     /// Window focus
     fn focus(&self) -> Signal<bool>;
 }
+
+
+/// An abstraction of a window's event generation facilities.
+pub trait RunnableWindow {
+    /// Run the window, calling a function every frame
+    fn run_with<F: FnMut()>(&mut self, fps: f64, render: F);
+
+    /// Run the window generating events
+    fn run(&mut self, fps: f64) { self.run_with(fps, || ()); }
+}
