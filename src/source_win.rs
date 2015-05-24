@@ -6,7 +6,7 @@ use carboxyl::{ Signal, Sink, Stream };
 use input::Input;
 use button::{ ButtonEvent, ButtonState };
 use window;
-use ::StreamingWindow;
+use ::{ StreamingWindow, RunnableWindow };
 
 
 /// A wrapper for all event sinks required for implementation
@@ -74,7 +74,6 @@ impl<W: window::Window<Event=Input>> EventSource for Rc<RefCell<W>> {
 /// A reactive window implementation generic over the event source.
 pub struct SourceWindow<S> {
     source: S,
-    tick_length: u64,
     sinks: EventSinks,
 }
 
@@ -84,10 +83,9 @@ impl<S: EventSource> SourceWindow<S> {
     /// # Parameters
     ///
     /// `tick_length` is the minimum duration of a tick in nanoseconds.
-    pub fn new(source: S, tick_length: u64) -> SourceWindow<S> {
+    pub fn new(source: S) -> SourceWindow<S> {
         SourceWindow {
             source: source,
-            tick_length: tick_length,
             sinks: EventSinks {
                 button: Sink::new(),
                 mouse_motion: Sink::new(),
@@ -99,15 +97,19 @@ impl<S: EventSource> SourceWindow<S> {
             }
         }
     }
+}
 
-    pub fn run<F: FnMut()>(&mut self, mut render: F) {
+impl<S: EventSource> RunnableWindow for SourceWindow<S> {
+    fn run_with<F: FnMut()>(&mut self, fps: f64, mut render: F) {
+        assert!(fps > 0.0);
+        let tick_length = (1e9 / fps) as u64;
         let mut time = precise_time_ns();
         let mut next_tick = time;
         while !self.source.should_close() {
             time = precise_time_ns();
             if time >= next_tick {
                 let diff = time - next_tick;
-                let delta = diff - diff % self.tick_length;
+                let delta = diff - diff % tick_length;
                 next_tick += delta;
                 while let Some(event) = self.source.poll_event() {
                     let _ = self.sinks.dispatch(event);
