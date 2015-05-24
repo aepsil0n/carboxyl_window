@@ -70,6 +70,26 @@ impl<W: window::Window<Event=Input>> EventSource for Rc<RefCell<W>> {
     }
 }
 
+impl<W: window::Window<Event=Input>> EventSource for Arc<RwLock<W>> {
+    fn should_close(&self) -> bool {
+        self.read().unwrap().should_close()
+    }
+
+    fn poll_event(&mut self) -> Option<Input> {
+        self.write().unwrap().poll_event()
+    }
+}
+
+impl<W: window::Window<Event=Input>> EventSource for Arc<Mutex<W>> {
+    fn should_close(&self) -> bool {
+        self.lock().unwrap().should_close()
+    }
+
+    fn poll_event(&mut self) -> Option<Input> {
+        self.lock().unwrap().poll_event()
+    }
+}
+
 
 /// A reactive window implementation generic over the event source.
 pub struct SourceWindow<S> {
