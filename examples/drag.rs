@@ -25,7 +25,8 @@ extern crate carboxyl_window;
 use window::WindowSettings;
 use input::{ Button, Key, MouseButton };
 use carboxyl::{ Signal, Stream };
-use carboxyl_window::{ StreamingWindow, ButtonState, ButtonEvent };
+use carboxyl_window::StreamingWindow;
+use carboxyl_window::button::{ ButtonState, ButtonEvent };
 use elmesque::Element;
 
 mod runners;
