@@ -4,12 +4,12 @@ extern crate clock_ticks;
 extern crate input;
 extern crate window;
 
-pub use button::*;
 pub use source_win::{ EventSource, SourceWindow };
 
+use button::ButtonEvent;
 use carboxyl::{ Stream, Signal };
 
-mod button;
+pub mod button;
 mod source_win;
 
 
