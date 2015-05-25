@@ -1,13 +1,11 @@
 use std::thread;
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::sync::{ Arc, RwLock, Mutex };
 use clock_ticks::precise_time_ns;
 use carboxyl::{ Signal, Sink, Stream };
 use input::Input;
 use button::{ ButtonEvent, ButtonState };
-use window;
+use window::{ Window, AdvancedWindow };
 use ::{ StreamingWindow, RunnableWindow };
+use borrowing::Borrowing;
 
 
 /// A wrapper for all event sinks required for implementation
@@ -48,57 +46,14 @@ impl EventSinks {
 }
 
 
-/// A source of window events.
-///
-/// Normally this will be a window handle. This has a minimal API to allow for
-/// any kind of other object, too. It is hard-coded to work with piston input
-/// events, as it should be easy to convert to those for a given backend.
-pub trait EventSource {
-    /// Should the window close?
-    fn should_close(&self) -> bool;
-
-    /// Poll an event if available (non-blocking).
-    fn poll_event(&mut self) -> Option<Input>;
-}
-
-impl<W: window::Window<Event=Input>> EventSource for Rc<RefCell<W>> {
-    fn should_close(&self) -> bool {
-        self.borrow().should_close()
-    }
-
-    fn poll_event(&mut self) -> Option<Input> {
-        self.borrow_mut().poll_event()
-    }
-}
-
-impl<W: window::Window<Event=Input>> EventSource for Arc<RwLock<W>> {
-    fn should_close(&self) -> bool {
-        self.read().unwrap().should_close()
-    }
-
-    fn poll_event(&mut self) -> Option<Input> {
-        self.write().unwrap().poll_event()
-    }
-}
-
-impl<W: window::Window<Event=Input>> EventSource for Arc<Mutex<W>> {
-    fn should_close(&self) -> bool {
-        self.lock().unwrap().should_close()
-    }
-
-    fn poll_event(&mut self) -> Option<Input> {
-        self.lock().unwrap().poll_event()
-    }
-}
-
-
 /// A reactive window implementation generic over the event source.
 pub struct SourceWindow<S> {
     source: S,
     sinks: EventSinks,
+    capture: Signal<bool>,
 }
 
-impl<S: EventSource> SourceWindow<S> {
+impl<S> SourceWindow<S> {
     /// Create a new Glium loop.
     ///
     /// # Parameters
@@ -115,24 +70,33 @@ impl<S: EventSource> SourceWindow<S> {
                 window_position: Sink::new(),
                 window_size: Sink::new(),
                 text: Sink::new(),
-            }
+            },
+            capture: Signal::new(false),
         }
+    }
+
+    /// Provide cursor capturing signal
+    pub fn capture(self, capture: Signal<bool>) -> SourceWindow<S> {
+        SourceWindow { capture: capture, .. self }
     }
 }
 
-impl<S: EventSource> RunnableWindow for SourceWindow<S> {
+impl<S> RunnableWindow for SourceWindow<S> where
+    S: Borrowing,
+    S::Target: Window<Event=Input> + AdvancedWindow,
+{
     fn run_with<F: FnMut()>(&mut self, fps: f64, mut render: F) {
         assert!(fps > 0.0);
         let tick_length = (1e9 / fps) as u64;
         let mut time = precise_time_ns();
         let mut next_tick = time;
-        while !self.source.should_close() {
+        while !self.source.with(Window::should_close) {
             time = precise_time_ns();
             if time >= next_tick {
                 let diff = time - next_tick;
                 let delta = diff - diff % tick_length;
                 next_tick += delta;
-                while let Some(event) = self.source.poll_event() {
+                while let Some(event) = self.source.with_mut(Window::poll_event) {
                     let _ = self.sinks.dispatch(event);
                 }
                 render();
