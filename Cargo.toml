@@ -9,36 +9,18 @@ readme = "README.md"
 keywords = ["frp", "reactive", "event", "window"]
 license = "LGPL-3.0+"
 
-
 [dependencies]
-carboxyl = "*"
-image = "*"
-clock_ticks = "*"
-
-[dependencies.pistoncore-input]
-git = "https://github.com/PistonDevelopers/input"
-
-[dependencies.pistoncore-window]
-git = "https://github.com/PistonDevelopers/window"
-
+carboxyl = "0.1"
+image = "0.3"
+clock_ticks = "0.0.5"
+pistoncore-input = "0.1"
+pistoncore-window = "0.1"
 
 [dev-dependencies]
-glutin = "*"
-
-[dev-dependencies.shader_version]
-git = "https://github.com/PistonDevelopers/shader_version"
-
-[dev-dependencies.pistoncore-glutin_window]
-git = "https://github.com/PistonDevelopers/glutin_window"
-
-[dev-dependencies.piston2d-graphics]
-git = "https://github.com/PistonDevelopers/graphics"
-
-[dev-dependencies.glium]
-default-features = false
-
-[dev-dependencies.piston2d-glium_graphics]
-git = "https://github.com/PistonDevelopers/glium_graphics"
-
-[dev-dependencies.elmesque]
-git = "https://github.com/mitchmindtree/elmesque"
+glutin = "0.1"
+shader_version = "0.1"
+pistoncore-glutin_window = "0.1"
+piston2d-graphics = "0.1"
+piston2d-glium_graphics = "0.1"
+elmesque = "0.1"
+glium = "0.5"
