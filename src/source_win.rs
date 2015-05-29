@@ -75,6 +75,11 @@ impl<S> SourceWindow<S> {
         }
     }
 
+    /// Mutably set cursor capturing signal
+    pub fn set_capture(&mut self, capture: Signal<bool>) {
+        self.capture = capture;
+    }
+
     /// Provide cursor capturing signal
     pub fn capture(self, capture: Signal<bool>) -> SourceWindow<S> {
         SourceWindow { capture: capture, .. self }
@@ -99,6 +104,8 @@ impl<S> RunnableWindow for SourceWindow<S> where
                 while let Some(event) = self.source.with_mut(Window::poll_event) {
                     let _ = self.sinks.dispatch(event);
                 }
+                let cap = self.capture.sample();
+                self.source.with_mut(|w| w.set_capture_cursor(cap));
                 render();
             }
             else {
