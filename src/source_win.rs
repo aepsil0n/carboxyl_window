@@ -41,6 +41,7 @@ impl EventSinks {
             Text(s) => self.text.send(s),
             Resize(width, height) => self.window_size.send((width, height)),
             Focus(flag) => self.focus.send(flag),
+            Cursor(_) => (),
         }
     }
 }
