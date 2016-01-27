@@ -1,4 +1,5 @@
 use std::thread;
+use std::time::Duration;
 use clock_ticks::precise_time_ns;
 use carboxyl::{ Signal, Sink, Stream };
 use input::Input;
@@ -110,7 +111,7 @@ impl<S> RunnableWindow for SourceWindow<S> where
                 render();
             }
             else {
-                thread::sleep_ms((next_tick - time) as u32);
+                thread::sleep(Duration::from_millis((next_tick - time) as u64));
             }
         }
     }
