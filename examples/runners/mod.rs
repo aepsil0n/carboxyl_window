@@ -38,6 +38,6 @@ pub fn run_glutin<F>(settings: WindowSettings, app: F)
                 .character_cache(&mut glyph_cache);
             element.draw(&mut renderer);
         }
-        target.finish();
+        target.finish().unwrap();
     });
 }

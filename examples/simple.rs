@@ -24,7 +24,7 @@ use window::WindowSettings;
 use carboxyl::Signal;
 use carboxyl_window::StreamingWindow;
 use elmesque::Element;
-use elmesque::color::Color;
+use elmesque::color::{Color, hsl};
 
 mod runners;
 
@@ -37,18 +37,18 @@ struct Model {
 }
 
 
+fn draw_colorful_circle(position: (f64, f64), wheel: (f64, f64)) -> Model {
+    Model {
+        position: position,
+        color: hsl(wheel.1 as f32 / 20.0, 1.0, 0.5),
+        text: format!("{:?}", wheel.1),
+    }
+}
+
 /// Some trivial application logic
 fn app_logic<W: StreamingWindow>(window: &W) -> Signal<Model> {
-    use elmesque::color::hsl;
-
     lift!(
-        |pos, wheel| {
-            Model {
-                position: pos,
-                color: hsl(wheel.1 as f32 / 20.0, 1.0, 0.5),
-                text: format!("{:?}", wheel.1),
-            }
-        },
+        draw_colorful_circle,
         &window.cursor(),
         &window.wheel()
     )
