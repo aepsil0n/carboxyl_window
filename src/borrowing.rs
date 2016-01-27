@@ -6,7 +6,7 @@
 
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::sync::{ Arc, RwLock, Mutex };
+use std::sync::{Arc, RwLock, Mutex};
 
 
 /// Abstraction of borrowing operating on a value with internal mutability.

@@ -1,11 +1,11 @@
 use std::thread;
 use std::time::Duration;
 use clock_ticks::precise_time_ns;
-use carboxyl::{ Signal, Sink, Stream };
+use carboxyl::{Signal, Sink, Stream};
 use input::Input;
-use button::{ ButtonEvent, ButtonState };
-use window::{ Window, AdvancedWindow };
-use ::{ StreamingWindow, RunnableWindow };
+use button::{ButtonEvent, ButtonState};
+use window::{Window, AdvancedWindow};
+use {StreamingWindow, RunnableWindow};
 use borrowing::Borrowing;
 
 
@@ -26,16 +26,18 @@ impl EventSinks {
         use input::Input::*;
 
         match event {
-            Press(button) =>
+            Press(button) => {
                 self.button.send(ButtonEvent {
                     button: button,
                     state: ButtonState::Pressed,
-                }),
-            Release(button) =>
+                })
+            }
+            Release(button) => {
                 self.button.send(ButtonEvent {
                     button: button,
                     state: ButtonState::Released,
-                }),
+                })
+            }
             Move(MouseCursor(x, y)) => self.mouse_motion.send((x, y)),
             Move(MouseScroll(x, y)) => self.mouse_wheel.send((x, y)),
             Move(_) => (),
@@ -84,13 +86,13 @@ impl<S> SourceWindow<S> {
 
     /// Provide cursor capturing signal
     pub fn capture(self, capture: Signal<bool>) -> SourceWindow<S> {
-        SourceWindow { capture: capture, .. self }
+        SourceWindow { capture: capture, ..self }
     }
 }
 
-impl<S> RunnableWindow for SourceWindow<S> where
-    S: Borrowing,
-    S::Target: Window<Event=Input> + AdvancedWindow,
+impl<S> RunnableWindow for SourceWindow<S>
+    where S: Borrowing,
+          S::Target: Window<Event = Input> + AdvancedWindow
 {
     fn run_with<F: FnMut()>(&mut self, fps: f64, mut render: F) {
         assert!(fps > 0.0);
@@ -109,8 +111,7 @@ impl<S> RunnableWindow for SourceWindow<S> where
                 let cap = self.capture.sample();
                 self.source.with_mut(|w| w.set_capture_cursor(cap));
                 render();
-            }
-            else {
+            } else {
                 thread::sleep(Duration::from_millis((next_tick - time) as u64));
             }
         }
@@ -139,7 +140,9 @@ impl<S> StreamingWindow for SourceWindow<S> {
     }
 
     fn wheel(&self) -> Signal<(f64, f64)> {
-        self.sinks.mouse_wheel.stream()
+        self.sinks
+            .mouse_wheel
+            .stream()
             .scan((0.0, 0.0), |(x, y), (dx, dy)| (x + dx, y + dy))
     }
 

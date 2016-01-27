@@ -45,37 +45,29 @@ fn draw_colorful_circle(position: (f64, f64), wheel: (f64, f64)) -> Model {
     }
 }
 
-/// Some trivial application logic
 fn app_logic<W: StreamingWindow>(window: &W) -> Signal<Model> {
-    lift!(
-        draw_colorful_circle,
-        &window.cursor(),
-        &window.wheel()
-    )
+    lift!(draw_colorful_circle, &window.cursor(), &window.wheel())
 }
 
-/// A functional view
 fn view((width, height): (u32, u32), model: Model) -> Element {
-    use elmesque::form::{ collage, group, circle, text };
+    use elmesque::form::{collage, group, circle, text};
     use elmesque::text::Text;
-    use elmesque::color::{ rgb, black };
+    use elmesque::color::{rgb, black};
 
     let (x, y) = model.position;
-    collage(width as i32, height as i32, vec![
-        group(vec![
+    collage(width as i32,
+            height as i32,
+            vec![group(vec![
             circle(60.0).filled(model.color),
             text(Text::from_string(model.text)
                 .color(rgb(1.0, 1.0, 1.0))),
         ])
-        .shift(x as f64, -y as f64)
-        .shift(-(width as f64 / 2.0), height as f64 / 2.0)
-    ])
-    .clear(black())
+                     .shift(x as f64, -y as f64)
+                     .shift(-(width as f64 / 2.0), height as f64 / 2.0)])
+        .clear(black())
 }
 
 fn main() {
-    runners::run_glutin(
-        WindowSettings::new("carboxyl_window :: example/simple.rs", (640, 480)),
-        |window| lift!(view, &window.size(), &app_logic(window))
-    );
+    runners::run_glutin(WindowSettings::new("carboxyl_window :: example/simple.rs", (640, 480)),
+                        |window| lift!(view, &window.size(), &app_logic(window)));
 }

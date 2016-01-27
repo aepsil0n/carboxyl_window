@@ -1,4 +1,4 @@
-use carboxyl::{ Stream, Signal };
+use carboxyl::{Stream, Signal};
 use input::Button;
 
 
@@ -11,15 +11,15 @@ pub enum ButtonState {
 
 impl ButtonState {
     /// Track the state of a button in a cell from a stream of button events.
-    pub fn track(inputs: &Stream<ButtonEvent>, button: Button)
-        -> Signal<ButtonState>
-    {
-        inputs
-            .filter_map(move |event|
-                if event.button == button { Some(event.state) }
-                else { None }
-            )
-            .hold(ButtonState::Released)
+    pub fn track(inputs: &Stream<ButtonEvent>, button: Button) -> Signal<ButtonState> {
+        inputs.filter_map(move |event| {
+                  if event.button == button {
+                      Some(event.state)
+                  } else {
+                      None
+                  }
+              })
+              .hold(ButtonState::Released)
     }
 }
 
@@ -35,9 +35,7 @@ pub enum Direction {
 
 impl Direction {
     /// Derive a direction from two button states.
-    pub fn from_buttons(plus: ButtonState, minus: ButtonState)
-        -> Direction
-    {
+    pub fn from_buttons(plus: ButtonState, minus: ButtonState) -> Direction {
         use button::ButtonState::{Pressed, Released};
         match (plus, minus) {
             (Pressed, Released) => Direction::Positive,
@@ -47,14 +45,10 @@ impl Direction {
     }
 
     /// Track direction from a stream of button events in a cell.
-    pub fn track(inputs: &Stream<ButtonEvent>, pos: Button, neg: Button)
-        -> Signal<Direction>
-    {
-        lift!(
-            Direction::from_buttons,
-            &ButtonState::track(inputs, pos),
-            &ButtonState::track(inputs, neg)
-        )
+    pub fn track(inputs: &Stream<ButtonEvent>, pos: Button, neg: Button) -> Signal<Direction> {
+        lift!(Direction::from_buttons,
+              &ButtonState::track(inputs, pos),
+              &ButtonState::track(inputs, neg))
     }
 }
 
@@ -82,9 +76,15 @@ mod test {
         let sink = Sink::new();
         let state = ButtonState::track(&sink.stream(), Button::Keyboard(Key::A));
         assert_eq!(state.sample(), Released);
-        sink.send(ButtonEvent { button: Button::Keyboard(Key::A), state: Pressed });
+        sink.send(ButtonEvent {
+            button: Button::Keyboard(Key::A),
+            state: Pressed,
+        });
         assert_eq!(state.sample(), Pressed);
-        sink.send(ButtonEvent { button: Button::Keyboard(Key::A), state: Released });
+        sink.send(ButtonEvent {
+            button: Button::Keyboard(Key::A),
+            state: Released,
+        });
         assert_eq!(state.sample(), Released);
     }
 
@@ -93,22 +93,34 @@ mod test {
         use super::Direction::*;
 
         let sink = Sink::new();
-        let direction = Direction::track(
-            &sink.stream(), Button::Keyboard(Key::W), Button::Keyboard(Key::S));
+        let direction = Direction::track(&sink.stream(),
+                                         Button::Keyboard(Key::W),
+                                         Button::Keyboard(Key::S));
 
         assert_eq!(direction.sample(), Still);
 
-        sink.send(ButtonEvent { button: Button::Keyboard(Key::W), state: Pressed });
+        sink.send(ButtonEvent {
+            button: Button::Keyboard(Key::W),
+            state: Pressed,
+        });
         assert_eq!(direction.sample(), Positive);
 
-        sink.send(ButtonEvent { button: Button::Keyboard(Key::S), state: Pressed });
+        sink.send(ButtonEvent {
+            button: Button::Keyboard(Key::S),
+            state: Pressed,
+        });
         assert_eq!(direction.sample(), Still);
 
-        sink.send(ButtonEvent { button: Button::Keyboard(Key::W), state: Released });
+        sink.send(ButtonEvent {
+            button: Button::Keyboard(Key::W),
+            state: Released,
+        });
         assert_eq!(direction.sample(), Negative);
 
-        sink.send(ButtonEvent { button: Button::Keyboard(Key::S), state: Released });
+        sink.send(ButtonEvent {
+            button: Button::Keyboard(Key::S),
+            state: Released,
+        });
         assert_eq!(direction.sample(), Still);
     }
 }
-

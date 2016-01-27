@@ -7,7 +7,7 @@ extern crate window;
 pub use source_win::SourceWindow;
 
 use button::ButtonEvent;
-use carboxyl::{ Stream, Signal };
+use carboxyl::{Stream, Signal};
 
 pub mod button;
 mod source_win;
@@ -45,5 +45,7 @@ pub trait RunnableWindow {
     fn run_with<F: FnMut()>(&mut self, fps: f64, render: F);
 
     /// Run the window generating events
-    fn run(&mut self, fps: f64) { self.run_with(fps, || ()); }
+    fn run(&mut self, fps: f64) {
+        self.run_with(fps, || ());
+    }
 }
