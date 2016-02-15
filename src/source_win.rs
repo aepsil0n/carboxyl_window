@@ -143,7 +143,7 @@ impl<S> StreamingWindow for SourceWindow<S> {
         self.sinks
             .mouse_wheel
             .stream()
-            .scan((0.0, 0.0), |(x, y), (dx, dy)| (x + dx, y + dy))
+            .fold((0.0, 0.0), |(x, y), (dx, dy)| (x + dx, y + dy))
     }
 
     fn focus(&self) -> Signal<bool> {
