@@ -3,21 +3,19 @@ use std::time::Duration;
 use clock_ticks::precise_time_ns;
 use carboxyl::{Signal, Sink, Stream};
 use input::Input;
-use button::{ButtonEvent, ButtonState};
 use window::{Window, AdvancedWindow};
-use {StreamingWindow, RunnableWindow};
 use borrowing::Borrowing;
+use ::{RunnableWindow, Event, Context, WindowProperties, Cursor, Driver};
 
 
 /// A wrapper for all event sinks required for implementation
 struct EventSinks {
+    event: Sink<Event>,
     window_position: Sink<(i32, i32)>,
     window_size: Sink<(u32, u32)>,
-    button: Sink<ButtonEvent>,
     mouse_motion: Sink<(f64, f64)>,
     mouse_wheel: Sink<(f64, f64)>,
     focus: Sink<bool>,
-    text: Sink<String>,
 }
 
 impl EventSinks {
@@ -26,22 +24,15 @@ impl EventSinks {
         use input::Input::*;
 
         match event {
-            Press(button) => {
-                self.button.send(ButtonEvent {
-                    button: button,
-                    state: ButtonState::Pressed,
-                })
-            }
-            Release(button) => {
-                self.button.send(ButtonEvent {
-                    button: button,
-                    state: ButtonState::Released,
-                })
-            }
+            Press(button) =>
+                self.event.send(Event::Press(button)),
+            Release(button) =>
+                self.event.send(Event::Release(button)),
+            Text(string) =>
+                self.event.send(Event::Text(string)),
             Move(MouseCursor(x, y)) => self.mouse_motion.send((x, y)),
             Move(MouseScroll(x, y)) => self.mouse_wheel.send((x, y)),
             Move(_) => (),
-            Text(s) => self.text.send(s),
             Resize(width, height) => self.window_size.send((width, height)),
             Focus(flag) => self.focus.send(flag),
             Cursor(_) => (),
@@ -67,13 +58,12 @@ impl<S> SourceWindow<S> {
         SourceWindow {
             source: source,
             sinks: EventSinks {
-                button: Sink::new(),
+                event: Sink::new(),
                 mouse_motion: Sink::new(),
                 mouse_wheel: Sink::new(),
                 focus: Sink::new(),
                 window_position: Sink::new(),
                 window_size: Sink::new(),
-                text: Sink::new(),
             },
             capture: Signal::new(false),
         }
@@ -118,21 +108,26 @@ impl<S> RunnableWindow for SourceWindow<S>
     }
 }
 
-impl<S> StreamingWindow for SourceWindow<S> {
+impl<S> Driver for SourceWindow<S> {
+    fn context(&self) -> Signal<Context> {
+        let window = lift!(WindowProperties::new,
+            &self.position(), &self.size(), &self.focus());
+        let cursor = lift!(Cursor::new, &self.cursor(), &self.wheel());
+        lift!(Context::new, &window, &cursor)
+    }
+
+    fn events(&self) -> Stream<Event> {
+        self.sinks.event.stream()
+    }
+}
+
+impl<S> SourceWindow<S> {
     fn position(&self) -> Signal<(i32, i32)> {
         self.sinks.window_position.stream().hold((0, 0))
     }
 
     fn size(&self) -> Signal<(u32, u32)> {
         self.sinks.window_size.stream().hold((0, 0))
-    }
-
-    fn buttons(&self) -> Stream<ButtonEvent> {
-        self.sinks.button.stream()
-    }
-
-    fn text(&self) -> Stream<String> {
-        self.sinks.text.stream()
     }
 
     fn cursor(&self) -> Signal<(f64, f64)> {

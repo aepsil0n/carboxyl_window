@@ -22,7 +22,7 @@ extern crate carboxyl_window;
 
 use window::WindowSettings;
 use carboxyl::Signal;
-use carboxyl_window::StreamingWindow;
+use carboxyl_window::Driver;
 use elmesque::Element;
 use elmesque::color::{Color, hsl};
 
@@ -45,8 +45,9 @@ fn draw_colorful_circle(position: (f64, f64), wheel: (f64, f64)) -> Model {
     }
 }
 
-fn app_logic<W: StreamingWindow>(window: &W) -> Signal<Model> {
-    lift!(draw_colorful_circle, &window.cursor(), &window.wheel())
+fn app_logic<W: Driver>(window: &W) -> Signal<Model> {
+    window.context().map(
+        |ctx| draw_colorful_circle(ctx.cursor.position, ctx.cursor.wheel))
 }
 
 fn view((width, height): (u32, u32), model: Model) -> Element {
@@ -69,5 +70,6 @@ fn view((width, height): (u32, u32), model: Model) -> Element {
 
 fn main() {
     runners::run_glutin(WindowSettings::new("carboxyl_window :: example/simple.rs", (640, 480)),
-                        |window| lift!(view, &window.size(), &app_logic(window)));
+        |window| lift!(|ctx, model| view(ctx.window.size, model),
+            &window.context(), &app_logic(window)));
 }
