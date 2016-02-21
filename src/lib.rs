@@ -12,7 +12,7 @@ mod source_win;
 mod borrowing;
 
 
-pub trait Driver {
+pub trait StreamingWindow {
     fn context(&self) -> Signal<Context>;
     fn events(&self) -> Stream<Event>;
 }

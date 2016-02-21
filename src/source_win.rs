@@ -5,7 +5,7 @@ use carboxyl::{Signal, Sink, Stream};
 use input::Input;
 use window::{Window, AdvancedWindow};
 use borrowing::Borrowing;
-use ::{RunnableWindow, Event, Context, WindowProperties, Cursor, Driver};
+use ::{RunnableWindow, Event, Context, WindowProperties, Cursor, StreamingWindow};
 
 
 /// A wrapper for all event sinks required for implementation
@@ -108,7 +108,7 @@ impl<S> RunnableWindow for SourceWindow<S>
     }
 }
 
-impl<S> Driver for SourceWindow<S> {
+impl<S> StreamingWindow for SourceWindow<S> {
     fn context(&self) -> Signal<Context> {
         let window = lift!(WindowProperties::new,
             &self.position(), &self.size(), &self.focus());
