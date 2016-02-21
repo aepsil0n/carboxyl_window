@@ -1,6 +1,6 @@
 [package]
 name = "carboxyl_window"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Eduard Bopp <eduard.bopp@aepsil0n.de>"]
 description = "Functional reactive window API"
 homepage = "https://github.com/aepsil0n/carboxyl_window"
