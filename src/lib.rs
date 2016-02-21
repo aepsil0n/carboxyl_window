@@ -8,7 +8,6 @@ use carboxyl::{Stream, Signal};
 
 pub use source_win::SourceWindow;
 
-pub mod button;
 mod source_win;
 mod borrowing;
 
