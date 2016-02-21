@@ -3,7 +3,7 @@ use std::rc::Rc;
 use glium::Surface;
 use glium_graphics::{Glium2d, GliumGraphics, GliumWindow, GlyphCache};
 use glutin_window::GlutinWindow;
-use carboxyl_window::{RunnableWindow, SourceWindow};
+use carboxyl_window::{RunnableWindow, SourceWindow, StreamingWindow};
 use carboxyl::Signal;
 use elmesque::{Element, Renderer};
 use shader_version::OpenGL;
@@ -20,7 +20,7 @@ pub fn run_glutin<F>(settings: WindowSettings, app: F)
     const GLVERSION: OpenGL = OpenGL::V2_1;
     let glutin_window = Rc::new(RefCell::new(GlutinWindow::new(settings).ok().unwrap()));
     let mut window = SourceWindow::new(glutin_window.clone());
-    let scene = lift!(|s, m| (s, m), &window.size(), &app(&window));
+    let scene = lift!(|ctx, model| (ctx.window.size, model), &window.context(), &app(&window));
     let glium_window = GliumWindow::new(&glutin_window).ok().unwrap();
     let mut backend_sys = Glium2d::new(GLVERSION, &glium_window);
     let mut glyph_cache = GlyphCache::new(&Path::new("./assets/NotoSans/NotoSans-Regular.ttf"),

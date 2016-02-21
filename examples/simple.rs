@@ -22,7 +22,7 @@ extern crate carboxyl_window;
 
 use window::WindowSettings;
 use carboxyl::Signal;
-use carboxyl_window::Driver;
+use carboxyl_window::StreamingWindow;
 use elmesque::Element;
 use elmesque::color::{Color, hsl};
 
@@ -45,7 +45,7 @@ fn draw_colorful_circle(position: (f64, f64), wheel: (f64, f64)) -> Model {
     }
 }
 
-fn app_logic<W: Driver>(window: &W) -> Signal<Model> {
+fn app_logic<W: StreamingWindow>(window: &W) -> Signal<Model> {
     window.context().map(
         |ctx| draw_colorful_circle(ctx.cursor.position, ctx.cursor.wheel))
 }
