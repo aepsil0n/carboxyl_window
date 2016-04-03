@@ -29,7 +29,6 @@ fn state_update(event: glutin::Event) -> Option<Update> {
 }
 
 
-/// A reactive window implementation generic over the event source.
 pub struct WindowDriver {
     window: glutin::Window,
     event_sink: Sink<Event>,
@@ -78,10 +77,7 @@ impl WindowDriver {
 
     pub fn context(&self) -> Signal<Context> {
         self.update_sink.stream()
-            .fold(
-                Default::default(),
-                |old, update| update.apply(old)
-            )
+            .fold(Context::default(), |old, update| update.apply(old))
     }
 
     pub fn events(&self) -> Stream<Event> {
