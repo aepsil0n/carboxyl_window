@@ -30,15 +30,15 @@ fn state_update(event: glutin::Event) -> Option<Update> {
 
 
 /// A reactive window implementation generic over the event source.
-pub struct SourceWindow {
+pub struct WindowDriver {
     window: glutin::Window,
     event_sink: Sink<Event>,
     update_sink: Sink<Update>
 }
 
-impl SourceWindow {
-    pub fn new(window: glutin::Window) -> SourceWindow {
-        SourceWindow {
+impl WindowDriver {
+    pub fn new(window: glutin::Window) -> WindowDriver {
+        WindowDriver {
             window: window,
             event_sink: Sink::new(),
             update_sink: Sink::new()

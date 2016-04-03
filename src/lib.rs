@@ -3,9 +3,9 @@ extern crate carboxyl;
 extern crate clock_ticks;
 extern crate glutin;
 
-pub use source_win::SourceWindow;
+pub use driver::WindowDriver;
 
-mod source_win;
+mod driver;
 mod updates;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
