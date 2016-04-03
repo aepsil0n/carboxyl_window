@@ -2,9 +2,7 @@ use std::thread;
 use std::time::Duration;
 use clock_ticks::precise_time_ns;
 use carboxyl::{Signal, Sink, Stream};
-use input::Input;
-use window::{Window, AdvancedWindow};
-use borrowing::Borrowing;
+use glutin;
 use ::{RunnableWindow, Event, Context, WindowProperties, Cursor, StreamingWindow};
 
 
@@ -19,44 +17,27 @@ struct EventSinks {
 }
 
 impl EventSinks {
-    fn dispatch(&self, event: Input) {
-        use input::Motion::*;
-        use input::Input::*;
-
-        match event {
-            Press(button) =>
-                self.event.send(Event::Press(button)),
-            Release(button) =>
-                self.event.send(Event::Release(button)),
-            Text(string) =>
-                self.event.send(Event::Text(string)),
-            Move(MouseCursor(x, y)) => self.mouse_motion.send((x, y)),
-            Move(MouseScroll(x, y)) => self.mouse_wheel.send((x, y)),
-            Move(_) => (),
-            Resize(width, height) => self.window_size.send((width, height)),
-            Focus(flag) => self.focus.send(flag),
-            Cursor(_) => (),
-        }
+    fn dispatch(&self, event: glutin::Event) {
+        // TODO
     }
 }
 
 
 /// A reactive window implementation generic over the event source.
-pub struct SourceWindow<S> {
-    source: S,
-    sinks: EventSinks,
-    capture: Signal<bool>,
+pub struct SourceWindow {
+    source: glutin::Window,
+    sinks: EventSinks
 }
 
-impl<S> SourceWindow<S> {
+impl SourceWindow {
     /// Create a new Glium loop.
     ///
     /// # Parameters
     ///
     /// `tick_length` is the minimum duration of a tick in nanoseconds.
-    pub fn new(source: S) -> SourceWindow<S> {
+    pub fn new(window: glutin::Window) -> SourceWindow {
         SourceWindow {
-            source: source,
+            source: window,
             sinks: EventSinks {
                 event: Sink::new(),
                 mouse_motion: Sink::new(),
@@ -64,42 +45,31 @@ impl<S> SourceWindow<S> {
                 focus: Sink::new(),
                 window_position: Sink::new(),
                 window_size: Sink::new(),
-            },
-            capture: Signal::new(false),
+            }
         }
-    }
-
-    /// Mutably set cursor capturing signal
-    pub fn set_capture(&mut self, capture: Signal<bool>) {
-        self.capture = capture;
-    }
-
-    /// Provide cursor capturing signal
-    pub fn capture(self, capture: Signal<bool>) -> SourceWindow<S> {
-        SourceWindow { capture: capture, ..self }
     }
 }
 
-impl<S> RunnableWindow for SourceWindow<S>
-    where S: Borrowing,
-          S::Target: Window<Event = Input> + AdvancedWindow
+impl RunnableWindow for SourceWindow
 {
     fn run_with<F: FnMut()>(&mut self, fps: f64, mut render: F) {
         assert!(fps > 0.0);
         let tick_length = (1e9 / fps) as u64;
         let mut time = precise_time_ns();
         let mut next_tick = time;
-        while !self.source.with(Window::should_close) {
+        let mut should_close = false;
+        while !should_close {
             time = precise_time_ns();
             if time >= next_tick {
                 let diff = time - next_tick;
                 let delta = diff - diff % tick_length;
                 next_tick += delta;
-                while let Some(event) = self.source.with_mut(Window::poll_event) {
+                for event in self.source.poll_events() {
+                    if let glutin::Event::Closed = event {
+                        should_close = true;
+                    }
                     let _ = self.sinks.dispatch(event);
                 }
-                let cap = self.capture.sample();
-                self.source.with_mut(|w| w.set_capture_cursor(cap));
                 render();
             } else {
                 thread::sleep(Duration::from_millis((next_tick - time) as u64));
@@ -108,7 +78,7 @@ impl<S> RunnableWindow for SourceWindow<S>
     }
 }
 
-impl<S> StreamingWindow for SourceWindow<S> {
+impl StreamingWindow for SourceWindow {
     fn context(&self) -> Signal<Context> {
         let window = lift!(WindowProperties::new,
             &self.position(), &self.size(), &self.focus());
@@ -121,7 +91,7 @@ impl<S> StreamingWindow for SourceWindow<S> {
     }
 }
 
-impl<S> SourceWindow<S> {
+impl SourceWindow {
     fn position(&self) -> Signal<(i32, i32)> {
         self.sinks.window_position.stream().hold((0, 0))
     }

@@ -1,15 +1,13 @@
 #[macro_use(lift)]
 extern crate carboxyl;
 extern crate clock_ticks;
-extern crate input;
-extern crate window;
+extern crate glutin;
 
 use carboxyl::{Stream, Signal};
 
 pub use source_win::SourceWindow;
 
 mod source_win;
-mod borrowing;
 
 
 pub trait StreamingWindow {
@@ -63,8 +61,8 @@ impl Context {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Event {
-    Press(input::Button),
-    Release(input::Button),
+    Press(()),
+    Release(()),
     Text(String)
 }
 
