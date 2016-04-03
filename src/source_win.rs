@@ -7,6 +7,28 @@ use ::{Event, Context};
 use updates::Update;
 
 
+fn state_update(event: glutin::Event) -> Option<Update> {
+    use updates::WindowUpdate::*;
+    use updates::CursorUpdate::{self, WheelDelta};
+    use glutin::Event::*;
+    use glutin::MouseScrollDelta;
+
+    Some(match event {
+        Resized(width, height) =>
+            Update::Window(Resize(width, height)),
+        Moved(x, y) =>
+            Update::Window(MoveTo(x, y)),
+        MouseMoved((x, y)) =>
+            Update::Cursor(CursorUpdate::MoveTo(x as f64, y as f64)),
+        MouseWheel(MouseScrollDelta::PixelDelta(x, y)) =>
+            Update::Cursor(WheelDelta(x as f64, y as f64)),
+        Focused(state) =>
+            Update::Window(Focus(state)),
+        _ => return None
+    })
+}
+
+
 /// A reactive window implementation generic over the event source.
 pub struct SourceWindow {
     window: glutin::Window,
@@ -49,24 +71,8 @@ impl SourceWindow {
     }
 
     fn dispatch(&self, event: glutin::Event) {
-        use updates::WindowUpdate::*;
-        use updates::CursorUpdate::{self, WheelDelta};
-        use glutin::Event::*;
-        use glutin::MouseScrollDelta;
-
-        match event {
-            Resized(width, height) =>
-                self.update_sink.send(Update::Window(Resize(width, height))),
-            Moved(x, y) =>
-                self.update_sink.send(Update::Window(MoveTo(x, y))),
-            MouseMoved((x, y)) =>
-                self.update_sink.send(Update::Cursor(
-                        CursorUpdate::MoveTo(x as f64, y as f64))),
-            MouseWheel(MouseScrollDelta::PixelDelta(x, y)) =>
-                self.update_sink.send(Update::Cursor(WheelDelta(x as f64, y as f64))),
-            Focused(state) =>
-                self.update_sink.send(Update::Window(Focus(state))),
-            _ => ()
+        if let Some(update) = state_update(event) {
+            self.update_sink.send(update);
         }
     }
 
