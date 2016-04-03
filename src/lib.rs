@@ -3,18 +3,10 @@ extern crate carboxyl;
 extern crate clock_ticks;
 extern crate glutin;
 
-use carboxyl::{Stream, Signal};
-
 pub use source_win::SourceWindow;
 
 mod source_win;
-
-
-pub trait StreamingWindow {
-    fn context(&self) -> Signal<Context>;
-    fn events(&self) -> Stream<Event>;
-}
-
+mod updates;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WindowProperties {
@@ -35,7 +27,17 @@ impl WindowProperties {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+impl Default for WindowProperties {
+    fn default() -> Self {
+        WindowProperties {
+            position: (0, 0),
+            size: (0, 0),
+            focus: true
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Cursor {
     pub position: (f64, f64),
     pub wheel: (f64, f64)
@@ -47,7 +49,7 @@ impl Cursor {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Context {
     pub window: WindowProperties,
     pub cursor: Cursor
@@ -64,15 +66,4 @@ pub enum Event {
     Press(()),
     Release(()),
     Text(String)
-}
-
-/// An abstraction of a window's event generation facilities.
-pub trait RunnableWindow {
-    /// Run the window, calling a function every frame
-    fn run_with<F: FnMut()>(&mut self, fps: f64, render: F);
-
-    /// Run the window generating events
-    fn run(&mut self, fps: f64) {
-        self.run_with(fps, || ());
-    }
 }
