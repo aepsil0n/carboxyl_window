@@ -1,6 +1,5 @@
 use std::thread;
-use std::time::Duration;
-use clock_ticks::precise_time_ns;
+use std::time::{Duration, Instant};
 use carboxyl::{Signal, Sink, Stream};
 use glutin;
 use ::{Event, Context};
@@ -46,16 +45,22 @@ impl WindowDriver {
 
     pub fn run_with<F: FnMut(&glutin::Window)>(&mut self, fps: f64, mut render: F) {
         assert!(fps > 0.0);
-        let tick_length = (1e9 / fps) as u64;
-        let mut time = precise_time_ns();
+        let mut time = Instant::now();
         let mut next_tick = time;
+        let ticks = 1e9 / fps;
+        let ticks_s = ticks as u64;
+        let ticks_ns = (ticks.fract() * 1e9) as u32;
+        let ticks_dur = Duration::new(ticks_s, ticks_ns);
         let mut should_close = false;
         while !should_close {
-            time = precise_time_ns();
+            time = Instant::now();
             if time >= next_tick {
                 let diff = time - next_tick;
-                let delta = diff - diff % tick_length;
-                next_tick += delta;
+                next_tick += if ticks_dur > diff {
+                    ticks_dur - diff
+                } else {
+                    Duration::new(0, 0)
+                };
                 for event in self.window.poll_events() {
                     if let glutin::Event::Closed = event {
                         should_close = true;
@@ -64,7 +69,7 @@ impl WindowDriver {
                 }
                 render(&self.window);
             } else {
-                thread::sleep(Duration::from_millis((next_tick - time) as u64));
+                thread::sleep(next_tick - time);
             }
         }
     }
