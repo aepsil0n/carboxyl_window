@@ -12,5 +12,4 @@ license = "LGPL-3.0+"
 [dependencies]
 carboxyl = "0.2"
 image = "0.6"
-clock_ticks = "0.1"
 glutin = "0.4"
