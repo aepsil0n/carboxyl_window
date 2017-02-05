@@ -1,6 +1,6 @@
 [package]
 name = "carboxyl_window"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Eduard Bopp <eduard.bopp@aepsil0n.de>"]
 description = "Functional reactive window API"
 homepage = "https://github.com/aepsil0n/carboxyl_window"
@@ -11,6 +11,6 @@ license = "LGPL-3.0+"
 
 [dependencies]
 carboxyl = "0.2"
-image = "0.6"
+image = "0.12"
 clock_ticks = "0.1"
-glutin = "0.4"
+glutin = "0.7"
