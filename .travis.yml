@@ -16,6 +16,10 @@ script:
     travis-cargo test &&
     travis-cargo doc
 
+after_success:
+  - travis-cargo --only stable doc-upload
+
 env:
   global:
+    - secure: gy66Uqsv6asMqeeRA2meJlJSa82xzV/IipXalhw3gGCJRYMEUSvJLVK1eJoUC/HW5iQzg8dudjqZ6qqsNoyqr81sbG6MJHcf5clPSRF7sCqcpfqSxRtYcLCTH43HMdbTGUYJhNBEEAgVf/BuXLdD7ync15+sUCDU8qUZmaMY9kQ=
     - TRAVIS_CARGO_NIGHTLY_FEATURE=""
