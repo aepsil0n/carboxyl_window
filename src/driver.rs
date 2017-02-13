@@ -18,9 +18,9 @@ fn state_update(event: glutin::Event) -> Option<Update> {
             Update::Window(Resize(width, height)),
         Moved(x, y) =>
             Update::Window(MoveTo(x, y)),
-        MouseMoved((x, y)) =>
+        MouseMoved(x, y) =>
             Update::Cursor(CursorUpdate::MoveTo(x as f64, y as f64)),
-        MouseWheel(MouseScrollDelta::PixelDelta(x, y)) =>
+        MouseWheel(MouseScrollDelta::PixelDelta(x, y), _) => // TODO: Implement touch state
             Update::Cursor(WheelDelta(x as f64, y as f64)),
         Focused(state) =>
             Update::Window(Focus(state)),

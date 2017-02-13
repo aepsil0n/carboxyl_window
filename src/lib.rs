@@ -1,4 +1,3 @@
-#[macro_use(lift)]
 extern crate carboxyl;
 extern crate clock_ticks;
 extern crate glutin;
